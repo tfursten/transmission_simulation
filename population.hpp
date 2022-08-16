@@ -68,6 +68,7 @@ typedef struct Stats {
     int bottleneck;
     float tier_1_fraction;
     float tier_2_fraction;
+    vector<int> ancestral_branch_segs;
 
 } Stats;
 
@@ -84,7 +85,9 @@ class Transmission {
         Stats stats;
         void analyze_tier1();
         void analyze_tier2();
-        void write_results(const char *filename);
+        void write_results(int repetition);
+
+
 
         
 

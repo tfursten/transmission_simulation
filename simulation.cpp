@@ -21,6 +21,10 @@ int main(int argv, char** argc) {
     int bottleneck = atoi(argc[3]);
     int rec_gens = atoi(argc[4]);
     int sample_size = atoi(argc[5]);
+    int repetition = 0;
+    if (argv == 7) {
+        repetition = atoi(argc[6]);
+    }
     int genome_size = 2800000;
 
     Population source(mu, carrying_capacity, src_gens, genome_size);
@@ -33,7 +37,7 @@ int main(int argv, char** argc) {
     Transmission trans(&source, &recipient, sample_size);
     trans.analyze_tier1();
     trans.analyze_tier2();
-    trans.write_results("stats.txt");
+    trans.write_results(repetition);
     
 }
 

@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <numeric>
+#include <ctime>
 
 #include <math.h>
 #include <cmath>
@@ -156,6 +159,7 @@ void Transmission::analyze_tier1() {
     vector<int> shared_snps;
     int src_segregating, rec_segregating;
     int combo_counter = 0, src_more_seg_counter = 0;
+    int segregating_diff;
     for (int i = 0; i < src.sample.size(); i++) {
         for (int j = 0; j < rec.sample.size(); j++) {
             shared_snps = get_shared_snps(src.sample[i], rec.sample[j]);
@@ -166,6 +170,9 @@ void Transmission::analyze_tier1() {
                 src_more_seg_counter++;
             }
             combo_counter++;
+
+            segregating_diff = src_segregating - rec_segregating;
+            stats.ancestral_branch_segs.push_back(segregating_diff);
         }
     }
 
@@ -237,10 +244,14 @@ int Transmission::count_segragating_snps(Sample sample, vector<int> snps) {
     return count;
 }
 
-void Transmission::write_results(const char *filename) {
-    std::ofstream file;
-    file.open(filename);
-    using std::endl;
+
+void Transmission::write_results(int repetition) {
+    using namespace std;
+    string statsfile = "stats-srcgen-" + to_string(stats.src_generations) 
+                                     + "-rep-" + to_string(repetition) + ".txt";
+
+    ofstream file;
+    file.open(statsfile);
     file << "carrying capacity: " << stats.carrying_capacity << endl;
     file << "sample size: " << stats.sample_size << endl;
     file << "src_generations: " << stats.src_generations << endl;
@@ -249,6 +260,18 @@ void Transmission::write_results(const char *filename) {
     file << "tier 1 fraction: " << stats.tier_1_fraction << endl;
     file << "tier 2 fraction: " << stats.tier_2_fraction << endl;
 
+    vector<int> a = stats.ancestral_branch_segs;
+    float average = accumulate(a.begin(), a.end(), 0.0) / a.size();
+    file << "average ancestral branch diff: " << average << endl;
+    file.close();
+
+    string segs_file = "segs-srcgen-" + to_string(stats.src_generations) 
+                                     + "-rep-" + to_string(repetition) + ".txt";
+    file.open(segs_file);
+    for (int seg_diff : stats.ancestral_branch_segs) {
+        file << seg_diff << ',';
+    }
+    file << endl;
     file.close();
 }
 
