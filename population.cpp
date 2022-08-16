@@ -37,7 +37,7 @@ Population::Population(const Population &source, int bottleneck,
     
     int selected;
     for (int i = 0; i < bottleneck; i++) {
-        selected = uniform_random_in_range(source.genomes.size());
+        selected = uniform_random_in_range(source.genomes.size(), random_seed);
         genomes.push_back(Genome(source.genomes[selected]));
     }
 }
@@ -57,11 +57,11 @@ void Population::mutate() {
     // calculate number of mutations this generation
     float mutations_expected = (mutation_rate * genome_size * genomes.size());
     int rounded_mutations_expected = (int) round(mutations_expected);
-    int poisson_mutations = poisson_dist(rounded_mutations_expected);
+    int poisson_mutations = poisson_dist(rounded_mutations_expected, random_seed);
     // select genomes to be mutated
     int selected_genome;
     for (int i = 0; i < poisson_mutations; i++) {
-        selected_genome = uniform_random_in_range(genomes.size());
+        selected_genome = uniform_random_in_range(genomes.size(), random_seed);
         genomes[selected_genome].add_random_mutation(genome_size);
     }
 }
@@ -70,7 +70,7 @@ void Population::select() {
 //printf("in select\n");
     int selected;
     while (genomes.size() > carrying_capacity) {
-        selected = uniform_random_in_range(genomes.size());
+        selected = uniform_random_in_range(genomes.size(), random_seed);
         genomes[selected] = genomes.back();
         genomes.pop_back();
     }
@@ -95,7 +95,7 @@ Genome::Genome(const Genome &copied) {
 }
 
 void Genome::add_random_mutation(int genome_size) {
-    int random_mutation = uniform_random_in_range(genome_size + 1);
+    int random_mutation = uniform_random_in_range(genome_size + 1, random_seed);
     mutations.push_back(random_mutation);
 }
 
@@ -109,7 +109,7 @@ Sample::Sample(Population *pop, int size) {
     Sample::size = size;
     int selected;
     for (int i = 0; i < size; i++) {
-        selected = uniform_random_in_range(pop->genomes.size());
+        selected = uniform_random_in_range(pop->genomes.size(), random_seed);
         sample.push_back(Genome(pop->genomes[selected]));
     }
 

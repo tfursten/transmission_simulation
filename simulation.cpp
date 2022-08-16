@@ -9,11 +9,12 @@
 #include <vector>
 using std::vector;
 
-
+int random_seed;
 
 int main(int argv, char** argc) {
 
-    // ./run [carrying capacity] [src gens] [bottleneck] [rec gens] [sample size]
+    // ./run [carrying capacity] [src gens] [bottleneck] [rec gens] 
+    //       [sample size] [random] [repetition] 
 
     double mu = 1.6 * pow(10, -10);
     int carrying_capacity = atoi(argc[1]);
@@ -21,9 +22,13 @@ int main(int argv, char** argc) {
     int bottleneck = atoi(argc[3]);
     int rec_gens = atoi(argc[4]);
     int sample_size = atoi(argc[5]);
+    random_seed = 1;
+    if (argv > 6) {
+        random_seed = atoi(argc[6]);
+    }
     int repetition = 0;
-    if (argv == 7) {
-        repetition = atoi(argc[6]);
+    if (argv > 7) {
+        repetition = atoi(argc[7]);
     }
     int genome_size = 2800000;
 

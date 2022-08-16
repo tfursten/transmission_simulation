@@ -3,6 +3,8 @@
 
 #include "population.hpp"
 
+extern int random_seed;
+
 Population *create_and_evolve_source(float mutation_rate, int carrying_capacity, 
                                               int genome_size, int generations);
 

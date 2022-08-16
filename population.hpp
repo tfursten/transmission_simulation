@@ -6,10 +6,12 @@
 using std::vector;
 using std::map;
 
+extern int random_seed;
 
 class Genome {
     private:
         vector<int> mutations;
+        int random_seed;
 
     public:
         Genome();
@@ -86,10 +88,6 @@ class Transmission {
         void analyze_tier1();
         void analyze_tier2();
         void write_results(int repetition);
-
-
-
-        
 
 };
 

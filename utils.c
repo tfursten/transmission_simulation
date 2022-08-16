@@ -1,16 +1,16 @@
 #include <stdlib.h>
 #include <math.h>
-#include <time.h>
 #include <assert.h>
+#include <time.h>
 
 #include "utils.h"
 
 
-int poisson_dist(int expected) {
+int poisson_dist(int expected, int seed) {
 
     static int seeded = 0;
     if (!seeded) {
-        srand(time(NULL));
+        srand(seed * time(NULL));
         seeded = 1;
     }
 
@@ -39,12 +39,12 @@ int poisson_dist(int expected) {
 }
 
 // get random number in range [0, limit)
-int uniform_random_in_range(int limit) {
+int uniform_random_in_range(int limit, int seed) {
 
     // seed random number generator
     static int seeded = 0;
     if (!seeded) {
-        srand(time(NULL));
+        srand(seed * time(NULL));
         seeded = 1;
     }
 
