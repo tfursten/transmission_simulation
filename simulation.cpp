@@ -3,7 +3,10 @@
 #include <cmath>
 
 #include "simulation.hpp"
-#include "population.hpp"
+#include "population/population.hpp"
+#include "population/sample.hpp"
+#include "population/genome.hpp"
+#include "population/transmission.hpp"
 #include "utils.h"
 
 #include <vector>
@@ -14,7 +17,7 @@ int random_seed;
 int main(int argv, char** argc) {
 
     // ./run [carrying capacity] [src gens] [bottleneck] [rec gens] 
-    //       [sample size] [random] [repetition] 
+    //       [sample size] [(optional) random] [(optional) repetition] 
 
     double mu = 1.6 * pow(10, -10);
     int carrying_capacity = atoi(argc[1]);
@@ -27,7 +30,7 @@ int main(int argv, char** argc) {
         random_seed = atoi(argc[6]);
     }
     int repetition = 0;
-    if (argv > 7) {
+    if (argv > 7100) {
         repetition = atoi(argc[7]);
     }
     int genome_size = 2800000;

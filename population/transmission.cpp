@@ -1,146 +1,12 @@
 #include <vector>
-#include <algorithm>
 #include <iostream>
 #include <fstream>
-#include <string>
+#include <algorithm>
 #include <numeric>
-#include <ctime>
 
-#include <math.h>
-#include <cmath>
-#include <stdio.h>
-
-#include "population.hpp"
-#include "utils.h"
+#include "transmission.hpp"
 
 using std::vector;
-
-// population
-Population::Population(double mutation_rate, int carrying_capacity, 
-                                             int generations, int genome_size) {
-    Population::mutation_rate = mutation_rate;
-    Population::carrying_capacity = carrying_capacity;
-    Population::generations = generations;
-    Population::genome_size = genome_size;
-
-    Genome founder;
-    genomes.push_back(founder);
-}
-
-Population::Population(const Population &source, int bottleneck, 
-                                                              int generations) {
-    Population::mutation_rate = source.mutation_rate;
-    Population::carrying_capacity = source.carrying_capacity;
-    Population::genome_size = source.genome_size;
-    Population::generations = generations;
-    Population::bottleneck = bottleneck;
-    
-    int selected;
-    for (int i = 0; i < bottleneck; i++) {
-        selected = uniform_random_in_range(source.genomes.size(), random_seed);
-        genomes.push_back(Genome(source.genomes[selected]));
-    }
-}
-
-Population::~Population() {}
-
-void Population::replicate() {
-//printf("in replicate\n");
-    int num_genomes = genomes.size();
-    for (int i = 0; i < num_genomes; i++) {
-        genomes.push_back(Genome(genomes[i]));
-    }
-}
-
-void Population::mutate() {
-//printf("in mutate\n");
-    // calculate number of mutations this generation
-    float mutations_expected = (mutation_rate * genome_size * genomes.size());
-    int rounded_mutations_expected = (int) round(mutations_expected);
-    int poisson_mutations = poisson_dist(rounded_mutations_expected, random_seed);
-    // select genomes to be mutated
-    int selected_genome;
-    for (int i = 0; i < poisson_mutations; i++) {
-        selected_genome = uniform_random_in_range(genomes.size(), random_seed);
-        genomes[selected_genome].add_random_mutation(genome_size);
-    }
-}
-
-void Population::select() {
-//printf("in select\n");
-    int selected;
-    while (genomes.size() > carrying_capacity) {
-        selected = uniform_random_in_range(genomes.size(), random_seed);
-        genomes[selected] = genomes.back();
-        genomes.pop_back();
-    }
-}
-
-void Population::evolve() {
-    for (int i = 0; i < generations; i++) {
-        if (i % 500 == 0) {
-            printf("generation %d\n", i);
-        }
-        replicate();
-        mutate();
-        select();
-    }
-}
-
-
-// genome
-Genome::Genome() {}
-Genome::Genome(const Genome &copied) {
-    mutations = copied.mutations;
-}
-
-void Genome::add_random_mutation(int genome_size) {
-    int random_mutation = uniform_random_in_range(genome_size + 1, random_seed);
-    mutations.push_back(random_mutation);
-}
-
-vector<int> Genome::get_mutations() {
-    return mutations;
-}
-
-
-// sample
-Sample::Sample(Population *pop, int size) {
-    Sample::size = size;
-    int selected;
-    for (int i = 0; i < size; i++) {
-        selected = uniform_random_in_range(pop->genomes.size(), random_seed);
-        sample.push_back(Genome(pop->genomes[selected]));
-    }
-
-    get_snps();
-    get_segregating_snps();
-}
-
-void Sample::get_snps() {
-    for (int i = 0; i < sample.size(); i++) {
-        vector<int> mutations = sample[i].get_mutations();
-
-        for (int j = 0; j < mutations.size(); j++) {
-            if (snps.count(mutations[j]) == 0) {
-                snps[mutations[j]] = Snp {
-                    .position = mutations[j],
-                    .count = 1,
-                    .proportion = -1,
-                };
-            }
-            else {
-                snps[mutations[j]].count++;
-            }
-        }
-    }
-}
-
-void Sample::get_segregating_snps() {
-    for (auto const &pair : snps) {
-        snps[pair.first].proportion = (float) pair.second.count / size;
-    }
-}
 
 
 // transmission
@@ -274,6 +140,3 @@ void Transmission::write_results(int repetition) {
     file << endl;
     file.close();
 }
-
-
-
