@@ -3,7 +3,10 @@
 #include <assert.h>
 #include <time.h>
 
-#include "utils.h"
+#include <vector>
+using std::vector;
+
+#include "utils.hpp"
 
 
 int poisson_dist(int expected, int seed) {
@@ -58,5 +61,26 @@ int uniform_random_in_range(int limit, int seed) {
     } while (random_num > skew_zone_bottom);
 
     return random_num % limit;
+}
+
+
+void combinations(int offset, int k, const vector<int> &in, 
+                                                     vector<vector<int>> &out) {
+    static vector<int> combs;
+
+    if (k == 0) {
+        vector<int> temp;
+        for (int i = 0; i < combs.size(); i++) {
+            temp.push_back(combs[i]);
+        }
+        out.push_back(temp);
+        return;
+    }
+
+    for (int i = offset; i <= in.size() - k; ++i) {
+        combs.push_back(in[i]);
+        combinations(i+1, k-1, in, out);
+        combs.pop_back();
+    }
 }
 

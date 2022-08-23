@@ -3,16 +3,14 @@
 
 #include <vector>
 
-class Genome {
-    private:
-        std::vector<int> mutations;
-        int random_seed;
+extern int random_seed;
 
+class Genome {
     public:
         Genome();
         Genome(const Genome &genome);
-        void add_random_mutation(int genome_size);
-        std::vector<int> get_mutations();     
+        std::vector<int> mutations;
+        void add_random_mutation(int genome_size);  
 };
 
 

@@ -3,31 +3,30 @@
 #include <cmath>
 
 #include "population.hpp"
-#include "../utils.h"
+#include "../utils.hpp"
 
 using std::vector;
 
 
-// population
 Population::Population(double mutation_rate, int carrying_capacity, 
-                                             int generations, int genome_size) {
-    Population::mutation_rate = mutation_rate;
-    Population::carrying_capacity = carrying_capacity;
-    Population::generations = generations;
-    Population::genome_size = genome_size;
-
+                                               int generations, int genome_size) 
+    : mutation_rate {mutation_rate}, 
+      carrying_capacity {carrying_capacity}, 
+      generations {generations},
+      genome_size {genome_size} 
+{
     Genome founder;
     genomes.push_back(founder);
 }
 
 Population::Population(const Population &source, int bottleneck, 
-                                                              int generations) {
-    Population::mutation_rate = source.mutation_rate;
-    Population::carrying_capacity = source.carrying_capacity;
-    Population::genome_size = source.genome_size;
-    Population::generations = generations;
-    Population::bottleneck = bottleneck;
-    
+                                                                int generations) 
+    : mutation_rate {source.mutation_rate},
+      carrying_capacity {source.carrying_capacity},
+      genome_size {source.genome_size},
+      generations {generations},
+      bottleneck {bottleneck}
+{ 
     int selected;
     for (int i = 0; i < bottleneck; i++) {
         selected = uniform_random_in_range(source.genomes.size(), random_seed);
@@ -35,7 +34,7 @@ Population::Population(const Population &source, int bottleneck,
     }
 }
 
-Population::~Population() {}
+Population::~Population() = default;
 
 void Population::replicate() {
 //printf("in replicate\n");

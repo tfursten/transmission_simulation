@@ -1,30 +1,28 @@
 #include "sample.hpp"
-#include "../utils.h"
+#include "../utils.hpp"
 
 using std::vector;
 
-Sample::Sample(Population *pop, int size) {
-    Sample::size = size;
+Sample::Sample(Population &pop, int size) {
     int selected;
     for (int i = 0; i < size; i++) {
-        selected = uniform_random_in_range(pop->genomes.size(), random_seed);
-        sample.push_back(Genome(pop->genomes[selected]));
+        selected = uniform_random_in_range(pop.genomes.size(), random_seed);
+        genomes.push_back(Genome(pop.genomes[selected]));
     }
 
     get_snps();
-    get_segregating_snps();
+    find_snp_proportions();
 }
 
 void Sample::get_snps() {
-    for (int i = 0; i < sample.size(); i++) {
-        vector<int> mutations = sample[i].get_mutations();
+    for (int i = 0; i < genomes.size(); i++) {
+        vector<int> mutations = genomes[i].mutations;
 
         for (int j = 0; j < mutations.size(); j++) {
             if (snps.count(mutations[j]) == 0) {
                 snps[mutations[j]] = Snp {
-                    .position = mutations[j],
                     .count = 1,
-                    .proportion = -1,
+                    .proportion = 0,
                 };
             }
             else {
@@ -34,8 +32,8 @@ void Sample::get_snps() {
     }
 }
 
-void Sample::get_segregating_snps() {
-    for (auto const &pair : snps) {
-        snps[pair.first].proportion = (float) pair.second.count / size;
+void Sample::find_snp_proportions() {
+    for (auto &pair : snps) {
+        pair.second.proportion = (float) pair.second.count / genomes.size();
     }
 }

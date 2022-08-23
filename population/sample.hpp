@@ -10,7 +10,6 @@
 extern int random_seed;
 
 typedef struct Snp {
-    int position;
     int count;
     float proportion;
 } Snp;
@@ -18,12 +17,11 @@ typedef struct Snp {
 class Sample {
     private:
         void get_snps();
-        void get_segregating_snps();
+        void find_snp_proportions();
 
     public:
-        Sample(Population *pop, int size);
-        int size;
-        std::vector<Genome> sample;
+        Sample(Population &pop, int size);
+        std::vector<Genome> genomes;
         std::map<int, Snp> snps;
 
 };

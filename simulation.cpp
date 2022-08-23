@@ -7,7 +7,7 @@
 #include "population/sample.hpp"
 #include "population/genome.hpp"
 #include "population/transmission.hpp"
-#include "utils.h"
+#include "utils.hpp"
 
 #include <vector>
 using std::vector;
@@ -25,6 +25,7 @@ int main(int argv, char** argc) {
     int bottleneck = atoi(argc[3]);
     int rec_gens = atoi(argc[4]);
     int sample_size = atoi(argc[5]);
+
     random_seed = 1;
     if (argv > 6) {
         random_seed = atoi(argc[6]);
@@ -33,7 +34,9 @@ int main(int argv, char** argc) {
     if (argv > 7100) {
         repetition = atoi(argc[7]);
     }
+    
     int genome_size = 2800000;
+
 
     Population source(mu, carrying_capacity, src_gens, genome_size);
     source.evolve();
@@ -42,9 +45,8 @@ int main(int argv, char** argc) {
     recipient.evolve();
 
 
-    Transmission trans(&source, &recipient, sample_size);
-    trans.analyze_tier1();
-    trans.analyze_tier2();
+    Transmission trans(source, recipient, sample_size);
+    trans.analyze(std::vector<int>{1,2,3}, 100);
     trans.write_results(repetition);
     
 }
