@@ -9,10 +9,11 @@ using std::vector;
 
 
 Population::Population(double mutation_rate, int carrying_capacity, 
-                                               int generations, int genome_size) 
+                      int src_generations, int rec_generations, int genome_size) 
     : mutation_rate {mutation_rate}, 
       carrying_capacity {carrying_capacity}, 
-      generations {generations},
+      src_generations {src_generations},
+      rec_generations {rec_generations},
       genome_size {genome_size} 
 {
     Genome founder;
@@ -20,11 +21,11 @@ Population::Population(double mutation_rate, int carrying_capacity,
 }
 
 Population::Population(const Population &source, int bottleneck, 
-                                                                int generations) 
+                                                            int rec_generations) 
     : mutation_rate {source.mutation_rate},
       carrying_capacity {source.carrying_capacity},
       genome_size {source.genome_size},
-      generations {generations},
+      rec_generations {rec_generations},
       bottleneck {bottleneck}
 { 
     int selected;
@@ -68,7 +69,7 @@ void Population::select() {
     }
 }
 
-void Population::evolve() {
+void Population::evolve(int generations) {
     for (int i = 0; i < generations; i++) {
         if (i % 500 == 0) {
             printf("generation %d\n", i);

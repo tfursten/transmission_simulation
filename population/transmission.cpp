@@ -10,12 +10,11 @@
 
 using std::vector;
 
-
 Transmission::Transmission(Population &src_pop, Population &rec_pop, int size)
     : src {src_pop, size}, 
       rec {rec_pop, size}, 
-      stats {src_pop.carrying_capacity, size, src_pop.generations, 
-      rec_pop.generations, rec_pop.bottleneck} {}
+      stats {src_pop.carrying_capacity, size, src_pop.src_generations, 
+      src_pop.rec_generations, rec_pop.bottleneck} {}
 
 
 void Transmission::analyze(vector<int> combo_sizes, int iterations) {

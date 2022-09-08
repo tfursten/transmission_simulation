@@ -1,0 +1,7 @@
+.vscode/
+*.out
+test.cpp
+test
+run
+run.json
+

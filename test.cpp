@@ -10,6 +10,13 @@
 using std::vector;
 using std::map;
 
+#include "json.hpp"
+using nlohmann::json;
+
+#include <iostream>
+using std::cout;
+
+#include <fstream>
 
 
 
@@ -20,18 +27,13 @@ using std::map;
 
 
 int main() {
-    
-    vector<int> in {1,3,5};
-    vector<vector<int>> out;
-    combinations(0, 1, in, out);
-	
-    for (int i = 0; i < out.size(); i++) {
-        printf("combination %d: ", i);
-        for (int j = 0; j < out[i].size(); j++) {
-            printf("%d, ", out[i][j]);
-        }
-        printf("\n");
-    }
+
+    std::ifstream file("test.json");
+
+    json data = json::parse(file);
+
+    cout << "name: " << data["name"] << "\n";
+    cout << "testing: " << data["one two"] << "\n";
 
 	return 0;
 }
