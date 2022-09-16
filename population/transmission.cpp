@@ -153,7 +153,7 @@ void Transmission::write_results(int run_id, int repetition) {
    
     string out_directory = "/projects/pearson_lab/trans_simulation/runs/run-" 
                                                 + to_string(run_id) + '/';
-    out_directory = "./"; // change ..
+    // out_directory = "./"; // change ..
     string statsfile = out_directory + "run-" + to_string(run_id) 
                                     + "-rep-" + to_string(repetition) + ".json";
 
