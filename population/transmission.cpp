@@ -5,6 +5,9 @@
 #include <numeric>
 #include <assert.h>
 
+#include "./../json.hpp"
+using nlohmann::json;
+
 #include "transmission.hpp"
 #include "../utils.hpp"
 
@@ -13,8 +16,7 @@ using std::vector;
 Transmission::Transmission(Population &src_pop, Population &rec_pop, int size)
     : src {src_pop, size}, 
       rec {rec_pop, size}, 
-      stats {src_pop.carrying_capacity, size, src_pop.src_generations, 
-      src_pop.rec_generations, rec_pop.bottleneck} {}
+      stats {} {}
 
 
 void Transmission::analyze(vector<int> combo_sizes, int iterations) {
@@ -45,7 +47,6 @@ void Transmission::analyze(vector<int> combo_sizes, int iterations) {
             if (seg_diff > 0) tier1_counter++;
             if (tier_2 > 0) tier2_counter++;
             if (seg_diff > 0 || tier_2 > 0) combined_counter++;
-            stats.ancestral_branch_segs[combo_size].push_back(seg_diff);
 
         }
         stats.tier_1_fractions[combo_size] = (float) tier1_counter / iterations;
@@ -121,47 +122,43 @@ int Transmission::count_segragating_snps(Sample sample,
 }
 
 
-void Transmission::write_results(int repetition) {
+void Transmission::write_results(int run_id, int repetition) {
     using namespace std;
-    string statsfile = "stats-srcgen-" + to_string(stats.src_generations) 
-                                     + "-rep-" + to_string(repetition) + ".txt";
+
+    json run_stats = { 
+        {"run_id", run_id},
+        {"repetition", repetition},
+        {"source sample", {}},
+        {"recipient sample", {}},
+    };
+
+    // raw snps
+    cout << "size of source: " << src.genomes.size() << endl;
+    cout << "size of recipient: " << rec.genomes.size() << endl;
+    for (int i = 0; i < src.genomes.size(); i++) {
+        run_stats["source sample"][to_string(i)] = src.genomes[i].mutations;
+    }
+    for (int i = 0; i < rec.genomes.size(); i++) {
+        run_stats["recipient sample"][to_string(i)] = rec.genomes[i].mutations;
+    }
+
+    // combo sizes
+    for (auto& [key, value] : stats.tier_1_fractions) {
+        run_stats["combo-" + to_string(key)]["tier 1 fraction"] = value;
+        run_stats["combo-" + to_string(key)]["tier 2 fraction"] = 
+                                                    stats.tier_2_fractions[key];
+        run_stats["combo-" + to_string(key)]["combined fraction"] = 
+                                                    stats.combined_outcome[key];
+    }
+   
+    string out_directory = "/projects/pearson_lab/trans_simulation/runs/run-" 
+                                                + to_string(run_id) + '/';
+    out_directory = "./"; // change ..
+    string statsfile = out_directory + "run-" + to_string(run_id) 
+                                    + "-rep-" + to_string(repetition) + ".json";
 
     ofstream file;
     file.open(statsfile);
-    file << "carrying capacity: " << stats.carrying_capacity << endl;
-    file << "sample size: " << stats.sample_size << endl;
-    file << "src_generations: " << stats.src_generations << endl;
-    file << "rec_generations: " << stats.rec_generations << endl;
-    file << "bottleneck: " << stats.bottleneck << endl;
-
-    for (const auto pair : stats.tier_1_fractions) {
-        file << "combo size " << pair.first << " tier 1 fraction: " 
-                                  << stats.tier_1_fractions[pair.first] << endl;
-    }
-    for (const auto pair : stats.tier_2_fractions) {
-        file << "combo size " << pair.first << " tier 2 fraction: " 
-                                  << stats.tier_2_fractions[pair.first] << endl;
-    }
-    for (const auto pair : stats.combined_outcome) {
-        file << "combo size " << pair.first << " combined outcome fraction: " 
-                                  << stats.combined_outcome[pair.first] << endl;
-    }
-
+    file << run_stats;
     file.close();
-
-    // raw ancestral branch seg differences
-    for (const auto pair : stats.ancestral_branch_segs) {
-        string segs_file = "segs-srcgen-" + to_string(stats.src_generations) 
-            + "-rep-" + to_string(repetition) + "-combosize-" + 
-            to_string(pair.first) + ".txt";
-        file.open(segs_file);
-
-        for (int seg_diff : pair.second) {
-            file << seg_diff << ',';
-        }
-        file << endl;
-
-        file.close();
-    }
-
 }

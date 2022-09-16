@@ -25,13 +25,16 @@ int main(int argv, char** argc) {
 
     std::ifstream  params_file(argc[1]);
     json params = json::parse(params_file);
-    double mu = stod( params["mutation rate"].get<string>() );
-    int genome_size = stoi( params["genome size"].get<string>() );
-    int carrying_capacity = stoi( params["carrying capacity"].get<string>() );
-    int src_gens = stoi( params["source generations"].get<string>() );
-    int bottleneck = stoi( params["bottleneck"].get<string>() );
-    int rec_gens = stoi( params["recipient generations"].get<string>() );
-    int sample_size = stoi( params["sample size"].get<string>() );
+
+    int run_id = params["run_id"];
+    double mu = params["mutation rate"];
+    int genome_size = params["genome size"];
+    int carrying_capacity = params["carrying capacity"];
+    int src_gens = params["source generations"];
+    int bottleneck = params["bottleneck"];
+    int rec_gens = params["recipient generations"];
+    int sample_size = params["sample size"];
+    vector<int> combo_sizes = params["combo sizes"];
 
     random_seed = 1;
     if (argv > 2) {
@@ -58,7 +61,7 @@ int main(int argv, char** argc) {
 
         // transmission analysis
         Transmission trans(source, recipient, sample_size);
-        trans.analyze(std::vector<int>{1,2,3}, 200);
-        trans.write_results(repetition); 
+        trans.analyze(combo_sizes, 200);
+        trans.write_results(run_id, repetition); 
 }
 
