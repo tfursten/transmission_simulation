@@ -2,14 +2,19 @@
 
 #include "genome.hpp"
 #include "../utils.hpp"
+#include <iostream>
 
 using std::vector;
 
+void add_random_mutation(Genome* genome, int genome_length) {
+    int mutation = uniform_random_in_range(genome_length + 1, random_seed);
+    genome->mutations.push_back(mutation);
+}
 
-Genome::Genome() {}
-Genome::Genome(const Genome &copied) : mutations {copied.mutations} {}
-
-void Genome::add_random_mutation(int genome_size) {
-    int random_mutation = uniform_random_in_range(genome_size + 1, random_seed);
-    mutations.push_back(random_mutation);
+Genome* copy_genome(Genome* genome) {
+    Genome* copy = new Genome{};
+    for (int mutation : genome->mutations) {
+        copy->mutations.push_back(mutation);
+    }
+    return copy;
 }

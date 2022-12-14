@@ -5,13 +5,11 @@
 
 extern int random_seed;
 
-class Genome {
-    public:
-        Genome();
-        Genome(const Genome &genome);
-        std::vector<int> mutations;
-        void add_random_mutation(int genome_size);  
+struct Genome {
+    std::vector<int> mutations;
 };
 
+void add_random_mutation(Genome* genome, int genome_length);
+Genome* copy_genome(Genome* genome);
 
 #endif

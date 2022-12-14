@@ -2,36 +2,39 @@
 #define POPULATION_HPP
 
 #include <vector>
-using std::vector;
+#include <string>
 
 #include "genome.hpp"
 
 extern int random_seed;
 
-class Population {
-    private:
 
-    public:
-        Population(double mutation_rate, int carrying_capacity, 
-                     int src_generations, int rec_generations, int genome_size);
-        Population(const Population &source, int bottleneck, 
-                                                           int rec_generations);
-        ~Population();
-
-        vector<Genome> genomes;
-        double mutation_rate;
-        int carrying_capacity;
-        int src_generations;
-        int rec_generations;
-        int genome_size;
-        int bottleneck;
-        
-        void replicate();
-        void mutate();
-        void select();
-        void evolve(int generations);
-
+struct SimulationParameters {
+    int run_id;
+    int repetition;
+    double mutation_rate;
+    int genome_length;
+    int carrying_capacity;
+    int source_generations;
+    int recipient_generations;
+    int bottleneck;
+    std::string output_path;
 };
 
+std::vector<Genome*> init_population();
+
+void replicate_population(std::vector<Genome*> &population);
+void mutate_population(std::vector<Genome*> &population, double mutation_rate, 
+                       int genome_length);
+void select_population(std::vector<Genome*> &population, 
+                       int carrying_capacity);
+void evolve_population(std::vector<Genome*> &population, 
+                       SimulationParameters params, int generations);
+
+void transmit(std::vector<Genome*> &source_population, 
+              std::vector<Genome*> &recipient_population, int bottleneck);
+
+void population_to_file(std::vector<Genome*> &population, 
+                        std::string output_file);
 
 #endif

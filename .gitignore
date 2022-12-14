@@ -1,6 +1,8 @@
 .vscode/
 *.out
 *.json
+*.csv
+*.gz
 test.cpp
 test
-run
+sim

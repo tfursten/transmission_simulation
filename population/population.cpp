@@ -1,83 +1,98 @@
 #include <vector>
 #include <stdio.h>
 #include <cmath>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #include "population.hpp"
+#include "genome.hpp"
 #include "../utils.hpp"
 
 using std::vector;
 
 
-Population::Population(double mutation_rate, int carrying_capacity, 
-                      int src_generations, int rec_generations, int genome_size) 
-    : mutation_rate {mutation_rate}, 
-      carrying_capacity {carrying_capacity}, 
-      src_generations {src_generations},
-      rec_generations {rec_generations},
-      genome_size {genome_size} 
-{
-    Genome founder;
-    genomes.push_back(founder);
+vector<Genome*> init_population() {
+    vector<Genome*> population;
+    Genome* founder = new Genome;
+    population.push_back(founder);
+    return population;
 }
 
-Population::Population(const Population &source, int bottleneck, 
-                                                            int rec_generations) 
-    : mutation_rate {source.mutation_rate},
-      carrying_capacity {source.carrying_capacity},
-      genome_size {source.genome_size},
-      rec_generations {rec_generations},
-      bottleneck {bottleneck}
-{ 
-    int selected;
-    for (int i = 0; i < bottleneck; i++) {
-        selected = uniform_random_in_range(source.genomes.size(), random_seed);
-        genomes.push_back(Genome(source.genomes[selected]));
+
+void replicate_population(vector<Genome*> &population) {
+    int initial_size = population.size();
+    for (int i = 0; i < initial_size; i++) {
+        population.push_back(copy_genome(population[i]));
     }
 }
 
-Population::~Population() = default;
+void mutate_population(vector<Genome*> &population, double mutation_rate,
+                       int genome_length) {
 
-void Population::replicate() {
-//printf("in replicate\n");
-    int num_genomes = genomes.size();
-    for (int i = 0; i < num_genomes; i++) {
-        genomes.push_back(Genome(genomes[i]));
-    }
-}
-
-void Population::mutate() {
-//printf("in mutate\n");
-    // calculate number of mutations this generation
-    float mutations_expected = (mutation_rate * genome_size * genomes.size());
+    // calculate number of mutations expected this generation
+    float mutations_expected = (mutation_rate * genome_length * 
+                                population.size());
     int rounded_mutations_expected = (int) round(mutations_expected);
-    int poisson_mutations = poisson_dist(rounded_mutations_expected, random_seed);
-    // select genomes to be mutated
+    int poisson_mutations = poisson_dist(rounded_mutations_expected, 
+                                         random_seed);
+    
+    // select and mutate genomes
     int selected_genome;
     for (int i = 0; i < poisson_mutations; i++) {
-        selected_genome = uniform_random_in_range(genomes.size(), random_seed);
-        genomes[selected_genome].add_random_mutation(genome_size);
+        selected_genome = uniform_random_in_range(population.size(), 
+                                                  random_seed);
+        add_random_mutation(population[selected_genome], genome_length);
     }
 }
 
-void Population::select() {
-//printf("in select\n");
+void select_population(vector<Genome*> &population, int carrying_capacity) {
     int selected;
-    while (genomes.size() > carrying_capacity) {
-        selected = uniform_random_in_range(genomes.size(), random_seed);
-        genomes[selected] = genomes.back();
-        genomes.pop_back();
+    while (population.size() > carrying_capacity) {
+        selected = uniform_random_in_range(population.size(), random_seed);
+        delete population[selected];
+        population[selected] = population[population.size() - 1];
+        population.pop_back();
     }
 }
 
-void Population::evolve(int generations) {
+void evolve_population(vector<Genome*> &population, 
+                       SimulationParameters params, int generations) {
+
     for (int i = 0; i < generations; i++) {
         if (i % 500 == 0) {
             printf("generation %d\n", i);
         }
-        replicate();
-        mutate();
-        select();
+        replicate_population(population);
+        mutate_population(population, params.mutation_rate, 
+                          params.genome_length);
+        select_population(population, params.carrying_capacity);
     }
 }
 
+void transmit(vector<Genome*> &source_population, 
+                          vector<Genome*> &recipient_population, 
+                          int bottleneck) {
 
+    int selected_genome;
+    for (int i = 0; i < bottleneck; i++) {
+        selected_genome = uniform_random_in_range(source_population.size(), 
+                                                  random_seed);
+        recipient_population.push_back(
+            copy_genome(source_population[selected_genome]));
+    }
+}
+
+void population_to_file(vector<Genome*> &population, std::string output_file) {
+
+    std::ofstream file;
+
+    file.open(output_file);
+    for (Genome* genome : population) {
+        for (int mutation : genome->mutations) {
+            file << mutation << ',';
+        }
+        file << '\n';
+    }
+    file.close();
+}
