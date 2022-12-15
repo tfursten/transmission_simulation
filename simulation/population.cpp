@@ -130,4 +130,7 @@ void write_gzip_file(std::string input_file, std::string compressed_file) {
     outfile.open(compressed_file);
     boost::iostreams::copy(in, outfile);
     outfile.close();
+
+    const char* old_file = input_file.c_str();
+    remove(old_file);
 }

@@ -42,9 +42,12 @@ int main(int argc, char** argv) {
         random_seed = 1;
     }
 
-    int repetition = 0;
     if (argc > 3) {
         params.repetition = atoi(argv[3]);
+        cout << atoi(argv[3]) << endl;
+        cout << params.repetition << endl;
+    } else {
+        params.repetition = 0;
     }
 
     if (argc > 4) {
@@ -53,8 +56,6 @@ int main(int argc, char** argv) {
         params.output_path = ".";
     }
 
-    write_gzip_file("source_pop_rep-0.csv", "source.gz");
-    return 0; 
     // simulation
 
         // evolution in source
@@ -70,12 +71,16 @@ int main(int argc, char** argv) {
         evolve_population(recipient_pop, params, params.recipient_generations);
 
         // write output
-        string source_file = params.output_path + "/source_pop_rep-" + 
-                             std::to_string(repetition) + ".csv";
-        string recipient_file = params.output_path + "/recipient_pop_rep-" +
-                                std::to_string(repetition) + ".csv";
+        string source_file = 
+            params.output_path + "/run-" + std::to_string(params.run_id) + 
+            "_source_pop_rep-" + std::to_string(params.repetition) + ".csv";
+        string recipient_file = 
+            params.output_path + "/run-" + std::to_string(params.run_id) + 
+            "_recipient_pop_rep-" + std::to_string(params.repetition) + ".csv";
         population_to_file(source_pop, source_file);
+        write_gzip_file(source_file, source_file + ".gz");
         population_to_file(recipient_pop, recipient_file);
+        write_gzip_file(recipient_file, recipient_file + ".gz");
 
 }
 
