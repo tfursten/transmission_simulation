@@ -21,7 +21,7 @@ int random_seed;
 
 int main(int argc, char** argv) {
 
-    // ./run json_params_file [random_seed] [repetition] [output_path] 
+    // ./run json_params_file [output_path] [random_seed] [repetition] 
 
     std::ifstream json_params_file(argv[1]);
     json json_params = json::parse(json_params_file);
@@ -37,24 +37,24 @@ int main(int argc, char** argv) {
     params.recipient_generations = json_params["recipient generations"];
 
     if (argc > 2) {
-        random_seed = atoi(argv[2]);
+        params.output_path = argv[2];
+    } else {
+        params.output_path = ".";
+    }
+    
+    if (argc > 3) {
+        random_seed = atoi(argv[3]);
     } else {
         random_seed = 1;
     }
 
-    if (argc > 3) {
-        params.repetition = atoi(argv[3]);
-        cout << atoi(argv[3]) << endl;
-        cout << params.repetition << endl;
+    if (argc > 4) {
+        params.repetition = atoi(argv[4]);
     } else {
         params.repetition = 0;
     }
 
-    if (argc > 4) {
-        params.output_path = argv[4];
-    } else {
-        params.output_path = ".";
-    }
+    
 
     // simulation
 
