@@ -3,12 +3,12 @@
 #include <fstream>
 #include <iostream>
 
-#include "json.hpp"
+#include "../json.hpp"
 using nlohmann::json;
 
-#include "population/population.hpp"
-#include "population/genome.hpp"
-#include "utils.hpp"
+#include "population.hpp"
+#include "genome.hpp"
+#include "../utils.hpp"
 
 #include <vector>
 using std::vector;
@@ -52,7 +52,9 @@ int main(int argc, char** argv) {
     } else {
         params.output_path = ".";
     }
-    
+
+    write_gzip_file("source_pop_rep-0.csv", "source.gz");
+    return 0; 
     // simulation
 
         // evolution in source

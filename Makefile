@@ -1,13 +1,17 @@
+FLAGS=-std=c++17 -Wall
+
 sim:
-	clang++ -std=c++17 -Wall simulation.cpp population/population.cpp \
-		population/genome.cpp utils.cpp -o sim
+	clang++ $(FLAGS) simulation/simulation.cpp simulation/population.cpp \
+		simulation/genome.cpp -lboost_iostreams utils.cpp -o sim
 
 debug_sim:
-	clang++ -std=c++17 -g -fsanitize=address -Wall simulation.cpp \
-		population/population.cpp population/genome.cpp utils.cpp -o sim
+	clang++ $(FLAGS) -g -fsanitize=address simulation/simulation.cpp \
+		simulation/population.cpp -lboost_iostreams simulation/genome.cpp \
+		utils.cpp -o sim
 
-test:
-	clang++ -std=c++17 test.cpp -o test
+analysis:
+	clang++ $(FLAGS) analysis/sample.cpp analysis/transmission.cpp \
+		utils.cpp -o analysis
 
 clean:
 	rm -rf sim test a.out sim.dSYM

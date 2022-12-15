@@ -3,6 +3,7 @@
 *.json
 *.csv
 *.gz
+*.txt
 test.cpp
 test
 sim
