@@ -126,8 +126,3 @@ void write_gzip_file(std::string input_file, std::string compressed_file) {
     const char* old_file = input_file.c_str();
     remove(old_file);
 }
-
-int main() {
-
-    return 0;
-}
