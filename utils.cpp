@@ -2,6 +2,13 @@
 #include <math.h>
 #include <assert.h>
 #include <time.h>
+#include <string>
+#include <iostream>
+#include <fstream>
+
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
 #include <vector>
 using std::vector;
@@ -84,3 +91,43 @@ void combinations(int offset, int k, const vector<int> &in,
     }
 }
 
+
+void read_gzip_file(std::string compressed_file, 
+                    std::string decompressed_file) {
+
+    using namespace std;
+    using namespace boost::iostreams;
+
+    ifstream file(compressed_file, ios_base::in | ios_base::binary);
+    filtering_streambuf<input> in;
+    in.push(gzip_decompressor());
+    in.push(file);
+    
+    ofstream outfile;
+    outfile.open(decompressed_file);
+    boost::iostreams::copy(in, outfile);
+    outfile.close();
+}
+
+void write_gzip_file(std::string input_file, std::string compressed_file) {
+    using namespace std;
+    using namespace boost::iostreams;
+
+    ifstream file(input_file);
+    filtering_streambuf<input> in;
+    in.push(gzip_compressor());
+    in.push(file);
+    
+    ofstream outfile;
+    outfile.open(compressed_file);
+    boost::iostreams::copy(in, outfile);
+    outfile.close();
+
+    const char* old_file = input_file.c_str();
+    remove(old_file);
+}
+
+int main() {
+
+    return 0;
+}

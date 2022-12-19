@@ -4,6 +4,7 @@
 *.csv
 *.gz
 *.txt
+*.a
 test.cpp
 test
 sim

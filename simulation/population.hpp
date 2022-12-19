@@ -37,7 +37,4 @@ void transmit(std::vector<Genome*> &source_population,
 void population_to_file(std::vector<Genome*> &population, 
                         std::string output_file);
 
-void read_gzip_file(std::string compressed_file, std::string decompressed_file);
-void write_gzip_file(std::string input_file, std::string compressed_file);
-
 #endif

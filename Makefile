@@ -4,6 +4,10 @@ sim:
 	clang++ $(FLAGS) simulation/simulation.cpp simulation/population.cpp \
 		simulation/genome.cpp -lboost_iostreams utils.cpp -o sim
 
+sim_monsoon:
+	clang++ $(FLAGS) simulation/simulation.cpp simulation/population.cpp \
+		simulation/genome.cpp utils.cpp -lz ./libboost_iostreams.a -o sim
+	  
 debug_sim:
 	clang++ $(FLAGS) -g -fsanitize=address simulation/simulation.cpp \
 		simulation/population.cpp -lboost_iostreams simulation/genome.cpp \
@@ -14,4 +18,4 @@ analysis:
 		utils.cpp -o analysis
 
 clean:
-	rm -rf sim test a.out sim.dSYM
+	rm -rf sim analysis a.out sim.dSYM
