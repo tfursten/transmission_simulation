@@ -11,9 +11,9 @@ using nlohmann::json;
 #include "../utils.hpp"
 
 #include <vector>
+
 using std::vector;
 using std::string;
-
 using std::cout;
 using std::endl;
 
@@ -21,7 +21,7 @@ int random_seed;
 
 int main(int argc, char** argv) {
 
-    // ./run json_params_file [output_path] [random_seed] [repetition] 
+    // ./sim json_params_file [output_path] [random_seed] [repetition] 
 
     std::ifstream json_params_file(argv[1]);
     json json_params = json::parse(json_params_file);

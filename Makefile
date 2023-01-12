@@ -1,4 +1,5 @@
 FLAGS=-std=c++17 -Wall
+DEBUG_FLAGS=-std=c++17 -Wall -g -fsanitize=address
 
 sim:
 	clang++ $(FLAGS) simulation/simulation.cpp simulation/population.cpp \
@@ -9,13 +10,9 @@ sim_monsoon:
 		simulation/genome.cpp utils.cpp -lz ./libboost_iostreams.a -o sim
 	  
 debug_sim:
-	clang++ $(FLAGS) -g -fsanitize=address simulation/simulation.cpp \
+	clang++ $(DEBUG_FLAGS) simulation/simulation.cpp \
 		simulation/population.cpp -lboost_iostreams simulation/genome.cpp \
 		utils.cpp -o sim
 
-analysis:
-	clang++ $(FLAGS) analysis/sample.cpp analysis/transmission.cpp \
-		utils.cpp -o analysis
-
 clean:
-	rm -rf sim analysis a.out sim.dSYM
+	rm -rf sim analyze a.out sim.dSYM/
