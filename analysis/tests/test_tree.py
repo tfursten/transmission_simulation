@@ -1,103 +1,8 @@
 import pytest
-import os
 
-from Population import Population
-from Genome import Genome
-from Tree import Tree
-
-
-class TestPopulation:
-  pop = Population()
-
-  def test_parse_csv(self):
-    with open("test_file.csv", 'w') as file:
-      file.write("200,12345,2700000,3,0\n")
-      file.write("4600,300500,13,\n")
-      file.write("\n")
-      file.write("7,\n")
-
-    self.pop.population = self.pop.parse_csv("test_file.csv")
-
-    assert len(self.pop.population) == 3
-    assert len(self.pop.population[0].mutations) == 5
-    assert self.pop.population[1].mutations == [4600, 300500, 13]
-  
-  def test_population_from_genomes(self):
-    genomes = [
-      Genome([1,2,3,4]),
-      Genome([]), 
-      Genome([1,3,4,5,7]),
-      Genome([10]),
-    ]
-    pop = Population.from_genomes(genomes, sample_size = 0)
-
-    assert len(pop.population) == 4 
-    assert pop.population[2].mutations == [1,3,4,5,7]
-    assert pop.population[1].mutations == []
-
-  def test_sample_population(self):
-    pop = Population.from_csv_file("test_file.csv", sample_size = 10)
-    
-    assert len(pop.sample) == 10
-    assert isinstance(pop.sample[0], Genome)
-    assert len(pop.sample_population(pop.sample, 0)) == 0
-     
-  def test_get_sample_snps(self):
-    sample = [
-      Genome([1,2,3,4,5]),
-      Genome([1,2,3,4]),
-      Genome([1,3,4,6]),
-      Genome([1,8]),
-    ]
-
-    snps = self.pop.get_sample_snps(sample)
-    
-    assert len(snps) == 7
-    assert 7 not in snps
-    assert snps[1]["count"] == 4
-    assert snps[1]["proportion"] == 1
-    assert snps[3]["proportion"] == 0.75 
-    assert snps[8]["proportion"] == 0.25
-    
-    print(snps)
-
-  def test_count_unique_genomes(self):
-    assert self.pop.count_unique_genomes([]) == 0
-    assert self.pop.count_unique_genomes([Genome([])]) == 1
-    assert self.pop.count_unique_genomes([Genome([]), Genome([])]) == 1
-
-    population = [
-      Genome([1,2,3,4]),
-      Genome([1,2,3,4]),
-      Genome([1,3,4,6]),
-      Genome([1,8]),
-    ]
-    assert self.pop.count_unique_genomes(population) == 3
-
-  def teardown_class(cls):
-    try:
-      os.remove("test_file.csv")
-    except OSError:
-      pass
-
-
-class TestGenome:
-  def test_eq_overload(self):
-    assert Genome([]) == Genome([])
-    assert Genome([]) != Genome([1])
-    assert Genome([1,2,3]) == Genome([2,1,3])
-    assert Genome([1,2,3]) != Genome([1,2])
-    assert Genome([1]) in [Genome([]), Genome([1])]
-    assert Genome([]) not in [Genome([1]), Genome([1,2])]
-
-  def test_is_unique_in_population(self):
-    pop = [
-      g1 := Genome([1,2,3,4]),
-      g2 := Genome([1,2,3,4,5]),
-      Genome([1,2,3,4]),
-    ]
-    assert not g1.is_unique_in_population(pop)
-    assert g2.is_unique_in_population(pop)
+from analysis.Tree import Tree
+from analysis.Population import Population
+from analysis.Genome import Genome
 
 
 class TestTree:
@@ -263,7 +168,7 @@ class TestTree:
     recipient_entropy = self.tree.psuedo_entropy([1, 0, 0, 0, 1])
     assert source_entropy == recipient_entropy
 
-    # important to understand the implications of this one phylogenetically 
+    # important to understand the phylogenetic implications of this one 
     source_entropy = self.tree.psuedo_entropy([3, 1, 0, 0])
     recipient_entropy = self.tree.psuedo_entropy([2, 2, 0, 0])
     assert source_entropy < recipient_entropy
@@ -303,4 +208,3 @@ class TestTree:
 
     branch[2]["recipient_proportion"] == 0.8
     assert self.tree.compare_clumpiness(branch, num_bins=10) == 0
-
