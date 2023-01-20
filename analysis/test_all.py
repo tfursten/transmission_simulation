@@ -211,3 +211,37 @@ class TestTree:
     assert self.tree.check_tier_2(source_branch, recipient_branch) == 0
 
     assert self.tree.check_tier_2({}, {}) == 0
+
+  def test_psuedo_entropy(self):
+    assert self.tree.psuedo_entropy([]) == 0
+    assert self.tree.psuedo_entropy([1]) == 0
+    assert self.tree.psuedo_entropy([30]) == 0
+    assert self.tree.psuedo_entropy([0, 1]) == 0
+    assert self.tree.psuedo_entropy([0, 99]) == 0
+    assert self.tree.psuedo_entropy([1, 1]) == 1
+
+    source_props_binned = [0, 0, 1, 3, 3]
+    recipient_props_binned = [0, 0, 0, 0, 7]
+    source_entropy = self.tree.psuedo_entropy(source_props_binned)
+    recipient_entropy = self.tree.psuedo_entropy(recipient_props_binned)
+    assert source_entropy > recipient_entropy
+
+    source_entropy = self.tree.psuedo_entropy([1, 1, 0, 0, 0])
+    recipient_entropy = self.tree.psuedo_entropy([1, 0, 0, 0, 1])
+    assert source_entropy == recipient_entropy
+
+    # important to understand the implications of this one phylogenetically 
+    source_entropy = self.tree.psuedo_entropy([3, 1, 0, 0])
+    recipient_entropy = self.tree.psuedo_entropy([2, 2, 0, 0])
+    assert source_entropy < recipient_entropy
+
+  def test_bin_proportions(self):
+    assert self.tree.bin_proportions([], num_bins=1) == []
+    assert self.tree.bin_proportions([1], num_bins=1) == [1]
+    assert self.tree.bin_proportions([1,1], num_bins=2) == [0,2]
+    assert self.tree.bin_proportions([1,1], num_bins=1) == [2]
+    # assert self.tree.bin_proportions([1, 0, 1], num_bins=2) == [1, 2]
+
+    proportions = [1, 0.4, 0.8, 1]
+    binned_proportions = self.tree.bin_proportions(proportions, num_bins=10)
+    assert binned_proportions == [0, 0, 0, 1, 0, 0, 0, 1, 0, 2]
