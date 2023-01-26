@@ -1,5 +1,7 @@
-from analysis.Population import Population
-from analysis.Genome import Genome
+import sys
+sys.path.append("../")
+from Population import Population
+from Genome import Genome
 
 
 class TestPopulation:
@@ -14,8 +16,9 @@ class TestPopulation:
 
     self.pop.population = self.pop.parse_csv("test_file.csv")
 
-    assert len(self.pop.population) == 3
+    assert len(self.pop.population) == 4
     assert len(self.pop.population[0].mutations) == 5
+    assert len(self.pop.population[2].mutations) == 0
     assert self.pop.population[1].mutations == [4600, 300500, 13]
   
   def test_population_from_genomes(self):

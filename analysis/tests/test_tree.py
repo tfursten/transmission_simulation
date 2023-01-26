@@ -1,9 +1,10 @@
 import pytest
 
-from analysis.Tree import Tree
-from analysis.Population import Population
-from analysis.Genome import Genome
-
+import sys
+sys.path.append("../")
+from Tree import Tree
+from Population import Population
+from Genome import Genome
 
 class TestTree:
   tree = Tree()
@@ -100,6 +101,8 @@ class TestTree:
     assert self.tree.check_tier_1(shared_branch) == 0
   
   def test_check_tier_2(self):
+    assert self.tree.check_tier_2(source_branch={}, recipient_branch={}) == 0
+
     source_branch = {
       1: {
         "source_proportion": 0.5,
@@ -137,14 +140,13 @@ class TestTree:
     source_branch[1]["recipient_proportion"] = 0.9
     assert self.tree.check_tier_2(source_branch, recipient_branch) == 0
 
-    assert self.tree.check_tier_2({}, {}) == 0
 
   def test_bin_proportions(self):
     assert self.tree.bin_proportions([], num_bins=1) == []
     assert self.tree.bin_proportions([1], num_bins=1) == [1]
     assert self.tree.bin_proportions([1,1], num_bins=2) == [0,2]
     assert self.tree.bin_proportions([1,1], num_bins=1) == [2]
-    # assert self.tree.bin_proportions([1, 0, 1], num_bins=2) == [1, 2]
+    assert self.tree.bin_proportions([1, 0.1, 1], num_bins=2) == [1, 2]
 
     proportions = [1, 0.4, 0.8, 1]
     binned_proportions = self.tree.bin_proportions(proportions, num_bins=10)

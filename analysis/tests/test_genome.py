@@ -1,4 +1,6 @@
-from analysis.Genome import Genome
+import sys
+sys.path.append("../")
+from Genome import Genome
 
 
 class TestGenome:
