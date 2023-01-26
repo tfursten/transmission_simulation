@@ -70,45 +70,6 @@ int uniform_random_in_range(int limit, int seed) {
     return random_num % limit;
 }
 
-
-void combinations(int offset, int k, const vector<int> &in, 
-                                                     vector<vector<int>> &out) {
-    static vector<int> combs;
-
-    if (k == 0) {
-        vector<int> temp;
-        for (int i = 0; i < combs.size(); i++) {
-            temp.push_back(combs[i]);
-        }
-        out.push_back(temp);
-        return;
-    }
-
-    for (int i = offset; i <= in.size() - k; ++i) {
-        combs.push_back(in[i]);
-        combinations(i+1, k-1, in, out);
-        combs.pop_back();
-    }
-}
-
-
-void read_gzip_file(std::string compressed_file, 
-                    std::string decompressed_file) {
-
-    using namespace std;
-    using namespace boost::iostreams;
-
-    ifstream file(compressed_file, ios_base::in | ios_base::binary);
-    filtering_streambuf<input> in;
-    in.push(gzip_decompressor());
-    in.push(file);
-    
-    ofstream outfile;
-    outfile.open(decompressed_file);
-    boost::iostreams::copy(in, outfile);
-    outfile.close();
-}
-
 void write_gzip_file(std::string input_file, std::string compressed_file) {
     using namespace std;
     using namespace boost::iostreams;
