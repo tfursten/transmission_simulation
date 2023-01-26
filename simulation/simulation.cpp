@@ -72,11 +72,11 @@ int main(int argc, char** argv) {
 
         // write output
         string source_file = 
-            params.output_path + "/run-" + std::to_string(params.run_id) + 
-            "_source_pop_rep-" + std::to_string(params.repetition) + ".csv";
+            params.output_path + "/run_" + std::to_string(params.run_id) + 
+            "_source_pop_rep_" + std::to_string(params.repetition) + ".csv";
         string recipient_file = 
-            params.output_path + "/run-" + std::to_string(params.run_id) + 
-            "_recipient_pop_rep-" + std::to_string(params.repetition) + ".csv";
+            params.output_path + "/run_" + std::to_string(params.run_id) + 
+            "_recipient_pop_rep_" + std::to_string(params.repetition) + ".csv";
         population_to_file(source_pop, source_file);
         write_gzip_file(source_file, source_file + ".gz");
         population_to_file(recipient_pop, recipient_file);
