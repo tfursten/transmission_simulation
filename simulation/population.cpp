@@ -64,16 +64,15 @@ void evolve_population(vector<Genome*> &population,
         if (i % 500 == 0) {
             printf("generation %d\n", i);
         }
-        replicate_population(population);
         mutate_population(population, params.mutation_rate, 
                           params.genome_length);
+        replicate_population(population);
         select_population(population, params.carrying_capacity);
     }
 }
 
 void transmit(vector<Genome*> &source_population, 
-                          vector<Genome*> &recipient_population, 
-                          int bottleneck) {
+              vector<Genome*> &recipient_population, int bottleneck) {
 
     int selected_genome;
     for (int i = 0; i < bottleneck; i++) {
@@ -85,9 +84,7 @@ void transmit(vector<Genome*> &source_population,
 }
 
 void population_to_file(vector<Genome*> &population, std::string output_file) {
-
     std::ofstream file;
-
     file.open(output_file);
     for (Genome* genome : population) {
         for (int mutation : genome->mutations) {
