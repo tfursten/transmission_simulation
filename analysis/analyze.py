@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from collections import defaultdict
 import sys
 import os
 import glob
 import json
 from statistics import mean
+import logging
+logging.getLogger().setLevel(logging.INFO)
 
 from Analysis import Analysis
 
@@ -38,25 +39,21 @@ def parse_analysis_params(analysis_params_file):
 def analyze(analysis_params):
   analysis_repetitions = []
   for _ in range(analysis_params.analysis_repetitions):
-    print("analysis rep:", len(analysis_repetitions) + 1)
+    logging.info(
+      "\tanalysis repetition: {}".format(len(analysis_repetitions) + 1)
+    )
     analysis = Analysis.from_params(analysis_params)
     analysis.perform_analysis()
     analysis.calculate_output()
     analysis_repetitions.append(analysis.get_output())
-  
+
   return average_repetitions(analysis_repetitions)
 
 def average_repetitions(repetitions):
   average_output = repetitions[0].copy()
-  average_output["tier 1 proportion"] = \
-    mean([r["tier 1 proportion"] for r in repetitions])
-  average_output["tier 2 proportion"] = \
-    mean([r["tier 2 proportion"] for r in repetitions])
-  average_output["clumpiness proportion"] = \
-    mean([r["clumpiness proportion"] for r in repetitions])
-  average_output["combined proportion"] = \
-    mean([r["combined proportion"] for r in repetitions])
-  
+  for key in repetitions[0]:
+    average_output[key] = round(mean([r[key] for r in repetitions]), 4)
+
   return average_output
 
 
@@ -80,8 +77,10 @@ if __name__ == "__main__":
 
   # perform analyses
   simulation_repetitions = []
-  for source_pop, recipient_pop in zip(source_pop_files[:], recipient_pop_files[:]):
-    print("analyzing repetition", len(simulation_repetitions) + 1)
+  for source_pop, recipient_pop in zip(source_pop_files, recipient_pop_files):
+    logging.info(
+      "simulation repetition: {}".format(len(simulation_repetitions) + 1)
+    )
     analysis_params.source_population_file = source_pop
     analysis_params.recipient_population_file = recipient_pop
     simulation_repetitions.append(analyze(analysis_params))
