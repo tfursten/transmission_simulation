@@ -88,6 +88,7 @@ if __name__ == "__main__":
   results = average_repetitions(simulation_repetitions)
 
   # get simulation parameters
+  # assumes parameters file in same dir as population files
   run_params_file = \
     os.path.join(pop_files_dir, "run_id_" + str(run_id) + ".json") 
   run_params = {}
