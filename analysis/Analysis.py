@@ -1,149 +1,152 @@
 import random
-from dataclasses import dataclass
 from statistics import mean
 
 from Tree import Tree
 from Population import Population
+
 
 class Analysis:
   def __init__(self):
     self.source_pop = None
     self.recipient_pop = None
     self.sample_size = None
-    self.combination_size = None
     self.num_clumpiness_bins = None
-    self.analyses = 50_000
-    
-    @dataclass
-    class Results:
-      analyses = 0
-      trees = 0
-      tier1_values = []
-      tier2_values = []
-      clumpiness_values = []
-      combined_values = []
-    self.results = Results()
-
-    @dataclass
-    class Output:
-      analyses = 0
-      trees = 0
-      source_pop_unique_genomes = None 
-      source_sample_unique_genomes = None 
-      recipient_pop_unique_genomes = None
-      recipient_sample_unique_genomes = None 
-      tier1_proportion = 0
-      tier2_proportion = 0
-      clumpiness_proportion = 0
-      combined_proportion = 0
-    self.output = Output()
+    self.results = {
+      "tier 1": {
+        "values": {
+          "correct detection": [],
+          "reverse detection": []
+        },
+        "proportion": {
+          "correct detection": None,
+          "reverse detection": None
+        }
+      },
+      "tier 2": {
+        "values": {
+          "correct detection": [],
+          "reverse detection": []
+        },
+        "proportion": {
+          "correct detection": None,
+          "reverse detection": None
+        }
+      },
+      "clumpiness": {
+        "values": {
+          "correct detection": [],
+          "reverse detection": []
+        },
+        "proportion": {
+          "correct detection": None,
+          "reverse detection": None
+        }
+      },
+      "combined": {
+        "values": {
+          "correct detection": [],
+          "reverse detection": []
+        },
+        "proportion": {
+          "correct detection": None,
+          "reverse detection": None
+        }
+      },
+      "population counts": {
+        "source population": 0,
+        "source sample": 0,
+        "recipient population": 0,
+        "recipient sample": 0
+      }
+    }
 
   @classmethod
   def from_params(cls, analysis_params):
     obj = cls()
-    obj.sample_size = analysis_params.sample_size
+    obj.sample_size = analysis_params["sample size"]
     obj.source_pop = \
-      Population.from_csv_file(analysis_params.source_population_file,
+      Population.from_csv_file(analysis_params["source population file"],
                                obj.sample_size)
     obj.recipient_pop = \
-      Population.from_csv_file(analysis_params.recipient_population_file,
+      Population.from_csv_file(analysis_params["recipient population file"],
                                obj.sample_size)
-    obj.combination_size  = analysis_params.combination_size
-    obj.num_clumpiness_bins = analysis_params.num_clumpiness_bins
-
+    obj.num_clumpiness_bins = analysis_params["number clumpiness bins"]
+    obj.count_populations = bool(int(analysis_params["count populations"]))
     return obj
 
   def perform_analysis(self):
-    assert self.combination_size > 0
-    assert self.combination_size < self.sample_size
-
-    if self.combination_size > 1:
-      # exploring all combinations not feasible
-      # even at combination_size = 2 there are 100M (100^4) possible samplings 
-      for _ in range(self.analyses):
-        self.results.analyses += 1
-
-        source_genomes = [random.choice(self.source_pop.sample) 
-                          for _ in range(self.combination_size)]
-        recipient_genomes = [random.choice(self.recipient_pop.sample) 
-                            for _ in range(self.combination_size)]
-
-        for source_genome in source_genomes:
-          for recipient_genome in recipient_genomes:
-            tree = Tree.initialized(source_genome, recipient_genome, 
-                                    self.source_pop, self.recipient_pop)
-            self.collect_tree_results(tree)
-        
-        self.detect_with_combination()
-
-    else:
-      for source_genome in self.source_pop.sample:
-        for recipient_genome in self.recipient_pop.sample:
-          self.results.analyses += 1
-          tree = Tree.initialized(source_genome, recipient_genome, 
-                                  self.source_pop, self.recipient_pop)
-          self.collect_tree_results(tree)
-
-  def detect_with_combination(self):
-    trees_per_detection = self.combination_size ** 2
-    for all_values in (self.results.tier1_values, 
-                   self.results.tier2_values,
-                   self.results.clumpiness_values, 
-                   self.results.combined_values):
-      tree_values = all_values[-trees_per_detection:]
-      del all_values[-trees_per_detection:]
-      all_values.append(1 if any(tree_values) else 0)
+    for source_genome in self.source_pop.sample:
+      for recipient_genome in self.recipient_pop.sample:
+        tree = Tree.initialized(source_genome, recipient_genome, 
+                                self.source_pop, self.recipient_pop)
+        self.collect_tree_results(tree)
 
   def collect_tree_results(self, tree):
-    self.results.trees += 1
-    tier1_value = tree.check_tier_1()
-    self.results.tier1_values.append(tier1_value) 
-    tier2_value = tree.check_tier_2()
-    self.results.tier2_values.append(tier2_value)
-    clumpiness_value = \
-      tree.compare_clumpiness(tree.shared_branch, self.num_clumpiness_bins)
-    self.results.clumpiness_values.append(clumpiness_value)
+    self.results["combined"]["values"]["correct detection"].append(0)
+    self.results["combined"]["values"]["reverse detection"].append(0)
+    for statistic, function in [
+        ("tier 1", tree.check_tier_1),
+        ("tier 2", tree.check_tier_2), 
+        ("clumpiness", tree.compare_clumpiness) 
+    ]:
+      if statistic == "clumpiness":
+          output = function(tree.shared_branch, self.num_clumpiness_bins)
+      else:
+        output = function()
+        
+      for type in ("correct detection", "reverse detection"):
+        self.results[statistic]["values"][type].append(output[type]) 
+        if output[type] == 1:
+          self.results["combined"]["values"][type][-1] = 1
 
-    combined_value = int(any([tier1_value, tier2_value, clumpiness_value]))
-    self.results.combined_values.append(combined_value)
+  def count_populations(self):
+    population_names = ("source population", "source sample", 
+                       "recipient population", "recipient sample")
+    populations = (self.source_pop.population, self.source_pop.sample, 
+                   self.recipient_pop.population, self.recipient_pop.sample)
 
-  def calculate_output(self, count_populations=False):
-    self.output.analyses = self.results.analyses
-    self.output.trees = self.results.trees
-    if count_populations:
-      self.output.source_pop_unique_genomes = \
-        self.source_pop.count_unique_genomes(self.source_pop.population)
-      self.output.source_sample_unique_genomes = \
-        self.source_pop.count_unique_genomes(self.source_pop.sample)
-      self.output.recipient_pop_unique_genomes = \
-        self.recipient_pop.count_unique_genomes(self.recipient_pop.population)
-      self.output.recipient_sample_unique_genomes = \
-        self.recipient_pop.count_unique_genomes(self.recipient_pop.sample)
+    for pop_name, pop in zip(population_names, populations):
+      self.results["population counts"][pop_name] = \
+        self.count_unique_genomes(pop)
+  
+  def count_unique_genomes(self, population):
+    unique_counter = 0
+    visited_genomes = []
+    for genome in population:
+      if genome not in visited_genomes:
+        visited_genomes.append(genome)
+        unique_counter += 1
     
-    self.output.tier1_proportion = mean(self.results.tier1_values) 
-    self.output.tier2_proportion = mean(self.results.tier2_values)
-    self.output.clumpiness_proportion = mean(self.results.clumpiness_values)
-    self.output.combined_proportion = mean(self.results.combined_values)
-    
+    return unique_counter
+
+  def get_proportions(self):
+    for statistic in ("tier 1", "tier 2", "clumpiness", "combined"):
+      self.results[statistic]["proportion"] = {
+        "correct detection": 
+          mean(self.results[statistic]["values"]["correct detection"]),
+        "reverse detection": 
+          mean(self.results[statistic]["values"]["reverse detection"])
+      }
+
   def get_output(self):
+    self.get_proportions()
     output = {
-      "analyses": self.output.analyses,
-      "trees": self.output.trees,
-      "tier 1 proportion": self.output.tier1_proportion,
-      "tier 2 proportion": self.output.tier2_proportion,
-      "clumpiness proportion": self.output.clumpiness_proportion,
-      "combined proportion": self.output.combined_proportion,
+      "tier 1 proportion": self.results["tier 1"]["proportion"],
+      "tier 2 proportion": self.results["tier 2"]["proportion"],
+      "clumpiness proportion": self.results["clumpiness"]["proportion"],
+      "combined proportion": self.results["combined"]["proportion"],
     }
-    if self.output.source_pop_unique_genomes is not None:
+    if self.count_populations:
+      self.count_populations()
       population_counts = {
         "unique genomes in source population": 
-          self.output.source_pop_unique_genomes,
+          self.results.unique_source_pop_genomes,
         "unique genomes in source sample": 
-          self.output.source_sample_unique_genomes,
+          self.results.unique_source_sample_genomes,
         "unique genomes in recipient population": 
-          self.output.recipient_pop_unique_genomes,
+          self.results.unique_recipient_pop_genomes,
         "unique genmoes in recipient sample":
-          self.output.recipient_sample_unique_genomes,
+          self.results.unique_recipient_sample_genomes,
       }
       output.update(population_counts)
 
