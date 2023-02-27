@@ -61,14 +61,6 @@ class Population:
           self.sample_snps[mutation] = \
             { "count": 1, "proportion": 1 / sample_size }
 
-  def count_unique_genomes(self, population):
-    unique_counter = 0
-    visited_genomes = []
-    for genome in population:
-      if genome not in visited_genomes:
-        visited_genomes.append(genome)
-        unique_counter += 1
-    
-    return unique_counter
+  
 
 
