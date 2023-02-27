@@ -69,7 +69,12 @@ class Tree:
     rec_segregating = \
       self.count_segregating_snps("recipient", self.shared_branch)
 
-    return 1 if src_segregating > rec_segregating else 0 
+    correct = int(src_segregating > rec_segregating)
+    reverse = int(rec_segregating > src_segregating)
+    return {
+      "correct detection": correct,
+      "reverse detection": reverse
+    }
 
   def check_tier_2(self):
     src_on_rec_branch_segs = \
@@ -77,8 +82,12 @@ class Tree:
     rec_on_src_branch_segs = \
       self.count_segregating_snps("recipient", self.source_branch) 
 
-    return 1 if ( src_on_rec_branch_segs > 0 and rec_on_src_branch_segs == 0 ) \
-      else 0
+    correct = int(src_on_rec_branch_segs > 0 and rec_on_src_branch_segs == 0) 
+    reverse = int(rec_on_src_branch_segs > 0 and src_on_rec_branch_segs == 0)
+    return {
+      "correct detection": correct,
+      "reverse detection": reverse
+    }
 
   def compare_clumpiness(self, branch, num_bins=10):
     source_proportions = [v["source_proportion"] for v in branch.values()]
@@ -91,7 +100,12 @@ class Tree:
     source_entropy = self.psuedo_entropy(source_proportions_binned)
     recipient_entropy = self.psuedo_entropy(recipient_proportions_binned)
 
-    return 1 if source_entropy > recipient_entropy else 0
+    correct = int(source_entropy > recipient_entropy)
+    reverse = int(recipient_entropy > source_entropy)
+    return {
+      "correct detection": correct,
+      "reverse detection": reverse
+    }
 
   def bin_proportions(self, proportions, num_bins):
     # note: having a bin number greater than the sample size is pointless
