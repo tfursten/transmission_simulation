@@ -100,7 +100,15 @@ class TestTree:
     assert shared_rec_segs == 1, "may fail due to random sampling" # [3]
 
   def test_check_tier_1(self):
-    branch = {
+    tree = Tree()
+    tree.shared_branch = {}
+    assert tree.check_tier_1() == \
+      {
+        "correct detection": 0,
+        "reverse detection": 0
+      }
+
+    tree.shared_branch = {
       1: {
         "source_proportion": 0.5,
         "recipient_proportion": 1, 
@@ -114,24 +122,38 @@ class TestTree:
         "recipient_proportion": 0.9, 
       },
     }
-    tree = Tree()
-    tree.shared_branch = branch
-    assert tree.check_tier_1() == 1
+    assert tree.check_tier_1() == \
+      {
+        "correct detection": 1,
+        "reverse detection": 0
+      }
 
     tree.shared_branch[1]["source_proportion"] = 1
-    assert tree.check_tier_1() == 0
+    assert tree.check_tier_1() == \
+      {
+        "correct detection": 0,
+        "reverse detection": 0
+      }
 
-    tree.shared_branch = {}
-    assert tree.check_tier_1() == 0
-
+    tree.shared_branch[2]["recipient_proportion"] = 0.4
+    assert tree.check_tier_1() == \
+      {
+        "correct detection": 0,
+        "reverse detection": 1
+      }
   
+
   def test_check_tier_2(self):
     tree = Tree()
     tree.source_branch = {}
     tree.recipient_branch = {}
-    assert tree.check_tier_2() == 0
+    assert tree.check_tier_2() == \
+      {
+        "correct detection": 0,
+        "reverse detection": 0
+      }
 
-    source_branch = {
+    tree.source_branch = {
       1: {
         "source_proportion": 0.5,
         "recipient_proportion": 1, 
@@ -145,30 +167,48 @@ class TestTree:
         "recipient_proportion": 1, 
       },
     }
-    recipient_branch = {
-      1: {
+    tree.recipient_branch = {
+      4: {
         "source_proportion": 0.5,
         "recipient_proportion": 1, 
       },
-      2: {
+      5: {
         "source_proportion": 1,
         "recipient_proportion": 1, 
       },
-      3: {
+      6: {
         "source_proportion": 1,
         "recipient_proportion": 0.9, 
       },
     }
-    tree.source_branch = source_branch
-    tree.recipient_branch = recipient_branch
-    assert tree.check_tier_2() == 1
+    assert tree.check_tier_2() == \
+      {
+        "correct detection": 1,
+        "reverse detection": 0
+      }
 
-    tree.recipient_branch[1]["source_proportion"] = 1
-    assert tree.check_tier_2() == 0
+    tree.recipient_branch[4]["source_proportion"] = 1
+    assert tree.check_tier_2() == \
+      {
+        "correct detection": 0,
+        "reverse detection": 0
+      }
 
-    tree.recipient_branch[1]["source_proportion"] = 0.5
     tree.source_branch[1]["recipient_proportion"] = 0.9
-    assert tree.check_tier_2() == 0
+    tree.recipient_branch[4]["source_proportion"] = 0.5
+    assert tree.check_tier_2() == \
+      {
+        "correct detection": 0,
+        "reverse detection": 0
+      }
+    
+    tree.source_branch[1]["recipient_proportion"] == 0.5
+    tree.recipient_branch[4]["source_proportion"] = 1
+    assert tree.check_tier_2() == \
+      {
+        "correct detection": 0,
+        "reverse detection": 1
+      }
 
 
   def test_bin_proportions(self):
@@ -245,7 +285,7 @@ class TestTree:
       }
     }
     entropys = tree.check_clumpiness(branch, num_bins=10)
-    assert entropys["source entropy"] < entropys["recipient entropy"]
+    assert entropys["source entropy"] > entropys["recipient entropy"]
 
   
   def test_check_clumpiness_ancestral(self):
