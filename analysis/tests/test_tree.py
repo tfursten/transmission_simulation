@@ -123,6 +123,7 @@ class TestTree:
 
     tree.shared_branch = {}
     assert tree.check_tier_1() == 0
+
   
   def test_check_tier_2(self):
     tree = Tree()
@@ -169,6 +170,7 @@ class TestTree:
     tree.source_branch[1]["recipient_proportion"] = 0.9
     assert tree.check_tier_2() == 0
 
+
   def test_bin_proportions(self):
     tree = Tree()
     assert tree.bin_proportions([], num_bins=1) == []
@@ -176,10 +178,12 @@ class TestTree:
     assert tree.bin_proportions([1,1], num_bins=2) == [0,2]
     assert tree.bin_proportions([1,1], num_bins=1) == [2]
     assert tree.bin_proportions([1, 0.1, 1], num_bins=2) == [1, 2]
+    assert tree.bin_proportions([1, 0, 0], num_bins=2) == [2, 1] 
 
     proportions = [1, 0.4, 0.8, 1]
     binned_proportions = tree.bin_proportions(proportions, num_bins=10)
     assert binned_proportions == [0, 0, 0, 1, 0, 0, 0, 1, 0, 2]
+
 
   def test_psuedo_entropy(self):
     tree = Tree()
@@ -204,40 +208,179 @@ class TestTree:
     source_entropy = tree.psuedo_entropy([3, 1, 0, 0])
     recipient_entropy = tree.psuedo_entropy([2, 2, 0, 0])
     assert source_entropy < recipient_entropy
-  
-  def test_compare_clumpiness(self):
+
+    # problem with entropy as proxy for diversity:
+    print("source:", tree.psuedo_entropy([5,1,1,1,1,1]))
+    print("recipient:", tree.psuedo_entropy([0,3,0,2,3,2]))
+
+
+  def test_check_clumpiness(self):
     tree = Tree()
-    assert tree.compare_clumpiness({}, num_bins=10) == 0
+    assert tree.check_clumpiness({}, num_bins=10) == \
+      {
+        "source entropy": 0,
+        "recipient entropy": 0
+      }
 
     branch = {
       1: {
         "source_proportion": 1,
-        "recipient_proportion": 1, 
+        "recipient_proportion": 1
+      }
+    }
+    assert tree.check_clumpiness(branch, num_bins=10) == \
+      {
+        "source entropy": 0,
+        "recipient entropy": 0
+      }
+
+    branch = {
+      1: {
+        "source_proportion": 1,
+        "recipient_proportion": 1
+      },
+      2: {
+        "source_proportion": 0.5,
+        "recipient_proportion": 1
+      }
+    }
+    entropys = tree.check_clumpiness(branch, num_bins=10)
+    assert entropys["source entropy"] < entropys["recipient entropy"]
+
+  
+  def test_check_clumpiness_ancestral(self):
+    tree = Tree()
+    assert tree.check_clumpiness_ancestral(num_bins=10) == \
+      {
+        "correct detection": 0,
+        "reverse detection": 0
+      }
+
+    tree.shared_branch = {
+      1: {
+        "source_proportion": 1,
+        "recipient_proportion": 1
       },
       2: {
         "source_proportion": 0.8,
-        "recipient_proportion": 1, 
+        "recipient_proportion": 1
       },
       3: {
-        "source_proportion": 0.7,
-        "recipient_proportion": 0.9, 
-      },
+        "source_proportion": 0.5,
+        "recipient_proportion": 0.8
+      }
     }
-    assert tree.compare_clumpiness(branch, num_bins=10) == 1
-    assert tree.compare_clumpiness(branch, num_bins=4) == 1
-    assert tree.compare_clumpiness(branch, num_bins=3) == 0
+    assert tree.check_clumpiness_ancestral(num_bins=10) == \
+      {
+        "correct detection": 1,
+        "reverse detection": 0
+      }
 
-    branch = {
+    tree.shared_branch = {
       1: {
         "source_proportion": 1,
-        "recipient_proportion": 1,
+        "recipient_proportion": 1
       },
       2: {
         "source_proportion": 1,
-        "recipient_proportion": 1,
+        "recipient_proportion": 0.9
+      },
+      3: {
+        "source_proportion": 0.5,
+        "recipient_proportion": 0.8
+      }
+    }
+    assert tree.check_clumpiness_ancestral(num_bins=10) == \
+      {
+        "correct detection": 0,
+        "reverse detection": 1
+      }
+
+    tree.shared_branch = {
+      1: {
+        "source_proportion": 1,
+        "recipient_proportion": 1
+      },
+      2: {
+        "source_proportion": 0.5,
+        "recipient_proportion": 0.8
+      }
+    }
+    assert tree.check_clumpiness_ancestral(num_bins=10) == \
+      {
+        "correct detection": 0,
+        "reverse detection": 0
+      }
+  
+
+  def test_check_clumpiness_composite(self):
+    tree = Tree()
+    assert tree.check_clumpiness_composite(num_bins=10) == \
+      {
+        "correct detection": 0,
+        "reverse detection": 0
+      }
+    
+    tree.shared_branch = {
+      1: {
+        "source_proportion": 0.8,
+        "recipient_proportion": 1
+      },
+      2: {
+        "source_proportion": 0.5,
+        "recipient_proportion": 1
+      }
+    }
+    tree.source_branch = {
+      3: {
+        "source_proportion": 1,
+        "recipient_proportion": 0
+      },
+      4: {
+        "source_proportion": 0.5,
+        "recipient_proportion": 0 
+      }
+    }
+    tree.recipient_branch = {
+      5: {
+        "source_proportion": 0,
+        "recipient_proportion": 1
+      },
+      6: {
+        "source_proportion": 0.5,
+        "recipient_proportion": 0.8
+      }
+    }
+    assert tree.check_clumpiness_composite(num_bins=10) == \
+      {
+        "correct detection": 1,
+        "reverse detection": 0
+      }
+
+    tree.shared_branch = {
+      1: {
+        "source_proportion": 1,
+        "recipient_proportion": 1
+      },
+      2: {
+        "source_proportion": 0.7,
+        "recipient_proportion": 0.8
+      }
+    }
+    tree.source_branch = {
+      3: {
+        "source_proportion": 1,
+        "recipient_proportion": 0
       },
     }
-    assert tree.compare_clumpiness(branch, num_bins=10) == 0
-
-    branch[2]["recipient_proportion"] == 0.8
-    assert tree.compare_clumpiness(branch, num_bins=10) == 0
+    tree.recipient_branch = {
+      5: {
+        "source_proportion": 0,
+        "recipient_proportion": 1
+      },
+    }
+    assert tree.check_clumpiness_composite(num_bins=10) == \
+      {
+        "correct detection": 0,
+        "reverse detection": 0
+      }
