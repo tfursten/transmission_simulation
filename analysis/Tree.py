@@ -105,10 +105,6 @@ class Tree:
     a_to_r_source_entropy, a_to_r_recipient_entropy = \
       self.check_clumpiness(ancestral_to_recipient, num_bins).values()
 
-    print("a to s s entropy", a_to_s_source_entropy)
-    print("a to s r entropy", a_to_s_recipient_entropy)
-    print("a to r s entropy", a_to_r_source_entropy)
-    print("a to r r entropy", a_to_r_recipient_entropy)
     correct = (a_to_s_source_entropy > a_to_s_recipient_entropy) and \
               (a_to_r_source_entropy >= a_to_r_recipient_entropy)
     reverse = (a_to_s_recipient_entropy > a_to_s_source_entropy) and \
