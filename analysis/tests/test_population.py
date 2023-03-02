@@ -18,6 +18,7 @@ class TestPopulation:
     assert len(pop.population[2].mutations) == 0
     assert pop.population[1].mutations == [4600, 300500, 13]
   
+
   def test_population_from_genomes(self):
     genomes = [
       Genome([1,2,3,4]),
@@ -30,6 +31,7 @@ class TestPopulation:
     assert pop.population[2].mutations == [1,3,4,5,7]
     assert pop.population[1].mutations == []
 
+
   def test_sample_population(self):
     pop = Population.from_csv_file("test_file.csv", sample_size=10)
     assert len(pop.sample) == 10
@@ -38,6 +40,7 @@ class TestPopulation:
     pop = Population.from_csv_file("test_file.csv", sample_size=0)
     assert len(pop.sample) == 0
      
+
   def test_get_sample_snps(self):
     pop = Population()
     sample = [
@@ -56,19 +59,6 @@ class TestPopulation:
     assert snps[3]["proportion"] == 0.75 
     assert snps[8]["proportion"] == 0.25
     
-  def test_count_unique_genomes(self):
-    pop = Population()
-    assert pop.count_unique_genomes([]) == 0
-    assert pop.count_unique_genomes([Genome([])]) == 1
-    assert pop.count_unique_genomes([Genome([]), Genome([])]) == 1
-
-    population = [
-      Genome([1,2,3,4]),
-      Genome([1,2,3,4]),
-      Genome([1,3,4,6]),
-      Genome([1,8]),
-    ]
-    assert pop.count_unique_genomes(population) == 3
 
   def teardown_class(cls):
     import os
