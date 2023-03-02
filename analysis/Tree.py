@@ -89,7 +89,37 @@ class Tree:
       "reverse detection": reverse
     }
 
-  def compare_clumpiness(self, branch, num_bins=10):
+  def check_clumpiness_ancestral(self, num_bins):
+    source_entropy, recipient_entropy = \
+      self.check_clumpiness(self.shared_branch, num_bins).values()
+    return {
+      "correct detection": int(source_entropy > recipient_entropy),
+      "reverse detection": int(recipient_entropy > source_entropy)
+    }
+  
+  def check_clumpiness_composite(self, num_bins):
+    ancestral_to_source = self.shared_branch | self.source_branch
+    ancestral_to_recipient = self.shared_branch | self.recipient_branch
+    a_to_s_source_entropy, a_to_s_recipient_entropy = \
+      self.check_clumpiness(ancestral_to_source, num_bins).values()
+    a_to_r_source_entropy, a_to_r_recipient_entropy = \
+      self.check_clumpiness(ancestral_to_recipient, num_bins).values()
+
+    print("a to s s entropy", a_to_s_source_entropy)
+    print("a to s r entropy", a_to_s_recipient_entropy)
+    print("a to r s entropy", a_to_r_source_entropy)
+    print("a to r r entropy", a_to_r_recipient_entropy)
+    correct = (a_to_s_source_entropy > a_to_s_recipient_entropy) and \
+              (a_to_r_source_entropy >= a_to_r_recipient_entropy)
+    reverse = (a_to_s_recipient_entropy > a_to_s_source_entropy) and \
+              (a_to_r_recipient_entropy >= a_to_r_source_entropy)
+
+    return {
+      "correct detection": int(correct),
+      "reverse detection": int(reverse)
+    }
+
+  def check_clumpiness(self, branch, num_bins):
     source_proportions = [v["source_proportion"] for v in branch.values()]
     source_proportions_binned = \
       self.bin_proportions(source_proportions, num_bins) 
@@ -100,11 +130,9 @@ class Tree:
     source_entropy = self.psuedo_entropy(source_proportions_binned)
     recipient_entropy = self.psuedo_entropy(recipient_proportions_binned)
 
-    correct = int(source_entropy > recipient_entropy)
-    reverse = int(recipient_entropy > source_entropy)
     return {
-      "correct detection": correct,
-      "reverse detection": reverse
+      "source entropy": source_entropy,
+      "recipient entropy": recipient_entropy
     }
 
   def bin_proportions(self, proportions, num_bins):
@@ -115,12 +143,19 @@ class Tree:
       return []
 
     import math
-    bin_size = 1 / num_bins # proportions range (0, 1]
+    bin_size = 1 / num_bins
 
-    # note: need to handle 0 proportions for divergent branches...
-    # bins: [ (a, b], (b, c], ... ]
-    props_by_bin = [math.ceil(prop / bin_size) - 1  for prop in proportions]
-    return [props_by_bin.count(bin) for bin in range(num_bins)]
+    # bins: [ [a, b], (b, c], (c, d], ... ]
+    # note that lowest bin is double inclusive to include 0
+    proportions_by_bin_index = []
+    for proportion in proportions:
+      if proportion == 0:
+        proportions_by_bin_index.append(0)
+      else:
+        index = math.ceil(proportion / bin_size) - 1
+        proportions_by_bin_index.append(index)
+
+    return [proportions_by_bin_index.count(bin) for bin in range(num_bins)]
   
   def psuedo_entropy(self, binned_proportions):
     if len(binned_proportions) <= 1 or sum(binned_proportions) == 1:
