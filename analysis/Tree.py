@@ -115,6 +115,23 @@ class Tree:
       "reverse detection": int(reverse)
     }
 
+  def check_clumpiness_composite_averaged(self, num_bins):
+    ancestral_to_source = self.shared_branch | self.source_branch
+    ancestral_to_recipient = self.shared_branch | self.recipient_branch
+    a_to_s_source_entropy, a_to_s_recipient_entropy = \
+      self.check_clumpiness(ancestral_to_source, num_bins).values()
+    a_to_r_source_entropy, a_to_r_recipient_entropy = \
+      self.check_clumpiness(ancestral_to_recipient, num_bins).values()
+
+    avg_source_entropy = (a_to_s_source_entropy + a_to_r_source_entropy) / 2
+    avg_recipient_entropy = \
+      (a_to_s_recipient_entropy + a_to_r_recipient_entropy) / 2
+
+    return {
+      "correct detection": int(avg_source_entropy > avg_recipient_entropy),
+      "reverse detection": int(avg_recipient_entropy > avg_source_entropy)
+    }
+
   def check_clumpiness(self, branch, num_bins):
     source_proportions = [v["source_proportion"] for v in branch.values()]
     source_proportions_binned = \
