@@ -10,7 +10,7 @@ class Analysis:
     self.source_pop = None
     self.recipient_pop = None
     self.sample_size = None
-    self.num_clumpiness_bins = None
+    self.num_bins = None
     self.results = {}
 
   @classmethod
@@ -23,7 +23,7 @@ class Analysis:
     obj.recipient_pop = \
       Population.from_csv_file(analysis_params["recipient population file"],
                                obj.sample_size)
-    obj.num_clumpiness_bins = analysis_params["number clumpiness bins"]
+    obj.num_bins = analysis_params["number bins"]
     obj.count_populations = bool(int(analysis_params["count populations"]))
     return obj
 
@@ -35,25 +35,35 @@ class Analysis:
         self.collect_tree_results(tree)
 
   def collect_tree_results(self, tree):
-    self.collect_tree_result(tree, "tier 1", tree.check_tier_1)
-    self.collect_tree_result(tree, "tier 2", tree.check_tier_2)
-    self.collect_tree_result(tree, 
-                            "clumpiness ancestral", 
-                            tree.check_clumpiness_ancestral)
-    self.collect_tree_result(tree, 
-                            "clumpiness composite", 
-                            tree.check_clumpiness_composite)
-    self.collect_tree_result(tree, "combined", self.get_combined_values)
+    statistics = [
+      "tier 1",
+      "tier 2",
+      "clumpiness ancestral",
+      "clumpiness composite",
+      "clumpiness composite averaged",
+    ]
+    functions = [
+      tree.check_tier_1,
+      tree.check_tier_2,
+      tree.check_clumpiness_ancestral,
+      tree.check_clumpiness_composite,
+      tree.check_clumpiness_composite_averaged,
+    ]
+    for statistic, function in zip(statistics, functions):
+      self.collect_tree_result(statistic, function)
 
-  def collect_tree_result(self, tree, statistic, check_function):
+    self.collect_tree_result("combined", self.get_combined_values)
+
+  def collect_tree_result(self, statistic, check_function):
     if statistic not in self.results:
       self.results[statistic] = {
         "correct detection": [],
         "reverse detection": []
       }
 
-    if statistic in ["clumpiness ancestral", "clumpiness composite"]:
-      result = check_function(self.num_clumpiness_bins)
+    # clumpiness functions need num_bins argument
+    if "clumpiness" in statistic: 
+      result = check_function(self.num_bins)
     else:
       result = check_function()
 
