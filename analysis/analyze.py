@@ -8,6 +8,28 @@ logging.getLogger().setLevel(logging.INFO)
 from Analysis import Analysis
 
 
+def average_analysis_outputs(outputs):
+  """
+  Average the proportions from multiple analysis repetitions into one
+  dictionary.
+  """
+  detections = (
+    "correct detection proportion",
+    "reverse detection proportion",
+    "ambiguous detection proportion"
+  )
+  accumulator = outputs[0]
+  for d in outputs[1:]:
+    for key in d:
+      for detection in detections:
+        accumulator[key][detection] += d[key][detection]
+
+  for key in accumulator:
+    for detection in detections:
+      accumulator[key][detection] /= len(outputs)
+
+  return accumulator
+
 # python analyze.py run_params.json analysis_params.json population_files_dir
 if __name__ == "__main__":
   run_params_file = sys.argv[1]
@@ -34,11 +56,13 @@ if __name__ == "__main__":
   recipient_pop_files.sort()
 
   # perform analyses
-  simulation_outputs = []
+  all_simulation_outputs = []
   sim_count = 1
   for source_pop, recipient_pop in zip(source_pop_files, recipient_pop_files):
     logging.info("simulation repetition: {}".format(sim_count))
     sim_count += 1
+
+    simulation_outputs = []
     for i in range(analysis_params["analysis repetitions"]):
       logging.info("\tanalysis repetition: {}".format(i + 1))
       analysis_params["source population file"] = source_pop
@@ -47,10 +71,9 @@ if __name__ == "__main__":
       analysis.perform_analysis()
       simulation_outputs.append(analysis.get_output())
 
-  # long form json output
-  output = {}
-  for simulation_output in simulation_outputs:
-    simulation_output.update(run_params)
-    simulation_output.update(analysis_params)
-  
-  print(json.dumps(simulation_outputs))
+    average_analysis_output = average_analysis_outputs(simulation_outputs)
+    average_analysis_output.update(run_params)
+    average_analysis_output.update(analysis_params)
+    all_simulation_outputs.append(average_analysis_output)
+
+  print(json.dumps(all_simulation_outputs))
