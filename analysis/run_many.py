@@ -2,6 +2,7 @@ import os
 import sys
 
 # assumes run parameters file and population files in same directory
+# assumes analysis_params.json is in current working directory
 # python run_many.py pop_files_dir id...
 if __name__ == "__main__":
 	pop_id_files_dir = sys.argv[1]
