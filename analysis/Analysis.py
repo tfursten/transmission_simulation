@@ -38,16 +38,18 @@ class Analysis:
     statistics = [
       "tier 1",
       "tier 2",
-      "clumpiness ancestral",
-      "clumpiness composite",
-      "clumpiness composite averaged",
+      # "clumpiness ancestral",
+      # "clumpiness composite averaged",
+      "clumpiness composite gini",
+      "clumpiness composite standard"
     ]
     functions = [
       tree.check_tier_1,
       tree.check_tier_2,
-      tree.check_clumpiness_ancestral,
-      tree.check_clumpiness_composite,
-      tree.check_clumpiness_composite_averaged,
+      # tree.check_clumpiness_ancestral,
+      # tree.check_clumpiness_composite_averaged,
+      tree.check_clumpiness_composite_gini,
+      tree.check_clumpiness_composite_standard
     ]
     for statistic, function in zip(statistics, functions):
       self.collect_tree_result(statistic, function)
