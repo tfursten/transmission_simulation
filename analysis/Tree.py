@@ -116,11 +116,11 @@ class Tree:
   #     "reverse detection": int(avg_recipient_entropy > avg_source_entropy)
   #   }
 
-  def check_clumpiness_composite_gini(self, branch, num_bins):
-    return self.check_clumpiness_composite(self, "gini", branch, num_bins)
+  def check_clumpiness_composite_gini(self, num_bins):
+    return self.check_clumpiness_composite("gini", num_bins)
 
-  def check_clumpiness_composite_standard(self, branch, num_bins):
-    return self.check_clumpiness_composite(self, "standard", branch, num_bins)
+  def check_clumpiness_composite_standard(self, num_bins):
+    return self.check_clumpiness_composite("standard", num_bins)
 
   def check_clumpiness_composite(self, method, num_bins):
     ancestral_to_source = self.shared_branch | self.source_branch
@@ -189,11 +189,10 @@ class Tree:
       return 0
 
     max = (sum(binned_proportions) ** 2) - sum(binned_proportions)
-    entropy = sum([((p ** 2) - p) for p in binned_proportions]) / max 
-    return 1 - entropy
+    return 1 - sum([((p ** 2) - p) for p in binned_proportions]) / max 
   
   def standard_entropy(self, binned_proportions):
-    if len(binned_proportions) <= 1 or sum(binned_proportions):
+    if len(binned_proportions) <= 1 or sum(binned_proportions) == 1:
       return 0
 
     props = [p / sum(binned_proportions) for p in binned_proportions]
