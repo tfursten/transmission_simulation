@@ -5,8 +5,7 @@
 *.gz
 *.txt
 *.a
-test.cpp
-test
+tests
 sim
 __pycache__/
 .pytest_cache/
