@@ -20,7 +20,6 @@ vector<Genome*> init_population() {
     return population;
 }
 
-
 void replicate_population(vector<Genome*> &population) {
     int initial_size = population.size();
     for (int i = 0; i < initial_size; i++) {
