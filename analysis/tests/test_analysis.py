@@ -1,10 +1,9 @@
-import sys
-sys.path.append("../")
 import pytest
 
-from Analysis import Analysis
-from Genome import Genome
-from Population import Population
+from ..Analysis import Analysis
+from ..Genome import Genome
+from ..Population import Population
+
 
 class TestAnalysis:
   @pytest.fixture  

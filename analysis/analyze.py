@@ -5,7 +5,7 @@ import json
 import logging
 logging.getLogger().setLevel(logging.INFO)
 
-from Analysis import Analysis
+from .Analysis import Analysis
 
 
 def average_analysis_outputs(outputs):

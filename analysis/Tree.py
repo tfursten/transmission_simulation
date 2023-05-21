@@ -1,5 +1,6 @@
 import math
 
+
 class Tree:
   def __init__(self):
     self.source_genome = None

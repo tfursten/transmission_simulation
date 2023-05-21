@@ -1,5 +1,5 @@
 import random
-from Genome import Genome
+from .Genome import Genome
 
 
 class Population:

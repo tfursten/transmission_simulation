@@ -1,7 +1,5 @@
-import sys
-sys.path.append("../")
-from Population import Population
-from Genome import Genome
+from ..Population import Population
+from ..Genome import Genome
 
 
 class TestPopulation:

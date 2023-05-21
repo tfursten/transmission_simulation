@@ -1,8 +1,8 @@
 import random
 from statistics import mean
 
-from Tree import Tree
-from Population import Population
+from .Tree import Tree
+from .Population import Population
 
 
 class Analysis:
