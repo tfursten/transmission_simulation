@@ -92,44 +92,13 @@ class Tree:
       "reverse detection": reverse
     }
 
-  # def check_clumpiness_ancestral(self, num_bins):
-  #   source_entropy, recipient_entropy = \
-  #     self.check_clumpiness("gini", self.shared_branch, num_bins).values()
-  #   return {
-  #     "correct detection": int(source_entropy > recipient_entropy),
-  #     "reverse detection": int(recipient_entropy > source_entropy)
-  #   }
-  
-  # def check_clumpiness_composite_averaged(self, num_bins):
-  #   ancestral_to_source = self.shared_branch | self.source_branch
-  #   ancestral_to_recipient = self.shared_branch | self.recipient_branch
-  #   a_to_s_source_entropy, a_to_s_recipient_entropy = \
-  #     self.check_clumpiness("gini", ancestral_to_source, num_bins).values()
-  #   a_to_r_source_entropy, a_to_r_recipient_entropy = \
-  #     self.check_clumpiness("gini", ancestral_to_recipient, num_bins).values()
-
-  #   avg_source_entropy = (a_to_s_source_entropy + a_to_r_source_entropy) / 2
-  #   avg_recipient_entropy = \
-  #     (a_to_s_recipient_entropy + a_to_r_recipient_entropy) / 2
-
-  #   return {
-  #     "correct detection": int(avg_source_entropy > avg_recipient_entropy),
-  #     "reverse detection": int(avg_recipient_entropy > avg_source_entropy)
-  #   }
-
-  def check_clumpiness_composite_gini(self, num_bins):
-    return self.check_clumpiness_composite("gini", num_bins)
-
-  def check_clumpiness_composite_standard(self, num_bins):
-    return self.check_clumpiness_composite("standard", num_bins)
-
-  def check_clumpiness_composite(self, method, num_bins):
+  def check_clumpiness_composite(self, num_bins):
     ancestral_to_source = self.shared_branch | self.source_branch
     ancestral_to_recipient = self.shared_branch | self.recipient_branch
     a_to_s_source_entropy, a_to_s_recipient_entropy = \
-      self.check_clumpiness(method, ancestral_to_source, num_bins).values()
+      self.check_clumpiness(ancestral_to_source, num_bins).values()
     a_to_r_source_entropy, a_to_r_recipient_entropy = \
-      self.check_clumpiness(method, ancestral_to_recipient, num_bins).values()
+      self.check_clumpiness(ancestral_to_recipient, num_bins).values()
 
     correct = (a_to_s_source_entropy > a_to_s_recipient_entropy) and \
               (a_to_r_source_entropy >= a_to_r_recipient_entropy)
@@ -141,7 +110,7 @@ class Tree:
       "reverse detection": int(reverse)
     }
 
-  def check_clumpiness(self, method, branch, num_bins):
+  def check_clumpiness(self, branch, num_bins):
     source_proportions = [v["source_proportion"] for v in branch.values()]
     source_proportions_binned = \
       self.bin_proportions(source_proportions, num_bins) 
@@ -149,14 +118,8 @@ class Tree:
     recipient_proportions_binned = \
       self.bin_proportions(recipient_proportions, num_bins) 
 
-    if method == "standard":
-      source_entropy = self.standard_entropy(source_proportions_binned)
-      recipient_entropy = self.standard_entropy(recipient_proportions_binned)
-    elif method == "gini":
-      source_entropy = self.gini_purity(source_proportions_binned)
-      recipient_entropy = self.gini_purity(recipient_proportions_binned)
-    else:
-      raise ValueError("expected 'standard' or 'gini' entropy method")
+    source_entropy = self.standard_entropy(source_proportions_binned)
+    recipient_entropy = self.standard_entropy(recipient_proportions_binned)
 
     return {
       "source entropy": source_entropy,
@@ -185,13 +148,6 @@ class Tree:
 
     return [proportions_by_bin_index.count(bin) for bin in range(num_bins)]
 
-  def gini_purity(self, binned_proportions):
-    if len(binned_proportions) <= 1 or sum(binned_proportions) == 1:
-      return 0
-
-    max = (sum(binned_proportions) ** 2) - sum(binned_proportions)
-    return 1 - sum([((p ** 2) - p) for p in binned_proportions]) / max 
-  
   def standard_entropy(self, binned_proportions):
     if len(binned_proportions) <= 1 or sum(binned_proportions) == 1:
       return 0

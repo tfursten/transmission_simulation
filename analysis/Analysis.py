@@ -38,18 +38,12 @@ class Analysis:
     statistics = [
       "tier 1",
       "tier 2",
-      # "clumpiness ancestral",
-      # "clumpiness composite averaged",
-      "clumpiness composite gini",
-      "clumpiness composite standard"
+      "clumpiness composite"
     ]
     functions = [
       tree.check_tier_1,
       tree.check_tier_2,
-      # tree.check_clumpiness_ancestral,
-      # tree.check_clumpiness_composite_averaged,
-      tree.check_clumpiness_composite_gini,
-      tree.check_clumpiness_composite_standard
+      tree.check_clumpiness_composite_gini
     ]
     for statistic, function in zip(statistics, functions):
       self.collect_tree_result(statistic, function)
@@ -63,8 +57,7 @@ class Analysis:
         "reverse detection": []
       }
 
-    # clumpiness functions need num_bins argument
-    if "clumpiness" in statistic: 
+    if statistic == "clumpiness composite": 
       result = check_function(self.num_bins)
     else:
       result = check_function()
@@ -158,4 +151,3 @@ class Analysis:
       output.update(population_counts)
 
     return output
-
