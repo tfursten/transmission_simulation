@@ -30,20 +30,18 @@ def average_analysis_outputs(outputs):
 
   return accumulator
 
-# python analyze.py run_params.json analysis_params.json population_files_dir
+# python analyze.py run_params.json analysis_params.json
 if __name__ == "__main__":
   run_params_file = sys.argv[1]
   analysis_params_file = sys.argv[2]
-  pop_files_dir = sys.argv[3]
 
-  run_params = {}
-  analysis_params = {}
   with open(run_params_file, "r") as file:
     run_params = json.load(file)
   with open(analysis_params_file, 'r') as file:
     analysis_params = json.load(file)
 
   # find all population files belonging to simulation
+  pop_files_dir = analysis_params["path to simulation files"]
   run_id = run_params["run_id"]
   pop_files_pattern = \
     os.path.join(pop_files_dir, "run_" + str(run_id) + "*pop*csv")
