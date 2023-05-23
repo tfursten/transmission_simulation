@@ -27,36 +27,56 @@ class TestAnalysis:
     analysis.source_pop = source_pop
     analysis.recipient_pop = recipient_pop
     analysis.sample_size = 2
-    analysis.num_clumpiness_bins = 0
+    analysis.num_bins = 10
 
     return analysis
 
   def test_perform_analysis(self, analysis):
-    analysis.combination_size = 1
+    analysis.combination_number = 1
     analysis.perform_analysis()
-    assert analysis.results.analyses == 4
-    assert analysis.results.trees == 4
-    assert len(analysis.results.tier1_values) == 4
-    assert analysis.results.tier1_values == [0, 1, 0, 1]
-    assert analysis.results.tier2_values == [1, 0, 1, 0]
-    assert analysis.results.combined_values == [1, 1, 1, 1]
+    assert len(analysis.results["tier 1"]["correct detection"]) == 4
+    assert analysis.results["tier 1"] == {
+      "correct detection": [0, 1, 0, 1],
+      "reverse detection": [0, 0, 0, 0],
+    }
+    assert analysis.results["tier 2"] == {
+      "correct detection": [1, 0, 1, 0],
+      "reverse detection": [0, 1, 0, 0],
+    }
+    assert analysis.results["clumpiness"] == {
+      "correct detection": [1, 1, 1, 1],
+      "reverse detection": [0, 0, 0, 0],
+    }
+    assert analysis.results["combined"] == {
+      "correct detection": [1, 1, 1, 1],
+      "reverse detection": [0, 1, 0, 0],
+    }
 
-    analysis.combination_size = 2
-    analysis.results.analyses = 0
-    analysis.results.trees = 0
-    analysis.results.tier1_values = []
-    analysis.sample_size = 3 # not actually
+  def test_get_output(self, analysis):
+    analysis.combination_number = 1
     analysis.perform_analysis()
-    assert analysis.results.analyses == analysis.analyses == 50_000
-    assert analysis.results.trees == 200_000 # combosize^2 * analyses 
-    assert len(analysis.results.tier1_values) == analysis.analyses
+    output = analysis.get_output()
 
-  def test_calculate_output(self, analysis):
-    analysis.combination_size = 1
-    analysis.perform_analysis()
-    analysis.calculate_output()
-    assert analysis.output.analyses == 4
-    assert analysis.output.trees == 4
-    assert analysis.output.tier1_proportion == 0.5
-    assert analysis.output.tier2_proportion == 0.5
-    assert analysis.output.combined_proportion == 1
+    assert analysis.results["tier 1"]["ambiguous detection"] == [1, 0, 1, 0] 
+    assert analysis.results["tier 2"]["ambiguous detection"] == [0, 0, 0, 1] 
+    assert analysis.results["clumpiness"]["ambiguous detection"] == [0, 0, 0, 0] 
+    assert analysis.results["combined"]["ambiguous detection"] == [0, 1, 0, 0] 
+
+    assert output["tier 1"]["correct detection proportion"] == 0.5
+    assert output["tier 1"]["reverse detection proportion"] == 0
+    assert output["tier 1"]["ambiguous detection proportion"] == 0.5
+
+    assert output["tier 2"]["correct detection proportion"] == 0.5
+    assert output["tier 2"]["reverse detection proportion"] == 0.25
+    assert output["tier 2"]["ambiguous detection proportion"] == 0.25
+    
+    assert output["clumpiness"]["correct detection proportion"] == 1
+    assert output["clumpiness"]["reverse detection proportion"] == 0
+    assert output["clumpiness"]["ambiguous detection proportion"] == 0
+
+    assert output["combined"]["correct detection proportion"] == 1
+    assert output["combined"]["reverse detection proportion"] == 0.25
+    assert output["combined"]["ambiguous detection proportion"] == 0.25
+  
+  def test_combination_number(self, analysis):
+    pass

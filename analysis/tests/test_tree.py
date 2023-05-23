@@ -103,8 +103,8 @@ class TestTree:
     tree.shared_branch = {}
     assert tree.check_tier_1() == \
       {
-        "correct detection": 0,
-        "reverse detection": 0
+        "source segregating": 0,
+        "recipient segregating": 0
       }
 
     tree.shared_branch = {
@@ -123,22 +123,22 @@ class TestTree:
     }
     assert tree.check_tier_1() == \
       {
-        "correct detection": 1,
-        "reverse detection": 0
+        "source segregating": 2,
+        "recipient segregating": 1
       }
 
     tree.shared_branch[1]["source_proportion"] = 1
     assert tree.check_tier_1() == \
       {
-        "correct detection": 0,
-        "reverse detection": 0
+        "source segregating": 1,
+        "recipient segregating": 1
       }
 
     tree.shared_branch[2]["recipient_proportion"] = 0.4
     assert tree.check_tier_1() == \
       {
-        "correct detection": 0,
-        "reverse detection": 1
+        "source segregating": 1,
+        "recipient segregating": 2
       }
   
 
@@ -148,8 +148,8 @@ class TestTree:
     tree.recipient_branch = {}
     assert tree.check_tier_2() == \
       {
-        "correct detection": 0,
-        "reverse detection": 0
+        "source segregating on recipient": 0, 
+        "recipient segregating on source": 0
       }
 
     tree.source_branch = {
@@ -182,31 +182,30 @@ class TestTree:
     }
     assert tree.check_tier_2() == \
       {
-        "correct detection": 1,
-        "reverse detection": 0
+        "source segregating on recipient": 1, 
+        "recipient segregating on source": 0
       }
 
     tree.recipient_branch[4]["source_proportion"] = 1
     assert tree.check_tier_2() == \
       {
-        "correct detection": 0,
-        "reverse detection": 0
+        "source segregating on recipient": 0, 
+        "recipient segregating on source": 0
       }
 
     tree.source_branch[1]["recipient_proportion"] = 0.9
     tree.recipient_branch[4]["source_proportion"] = 0.5
     assert tree.check_tier_2() == \
       {
-        "correct detection": 0,
-        "reverse detection": 0
+        "source segregating on recipient": 1, 
+        "recipient segregating on source": 1
       }
-    
-    tree.source_branch[1]["recipient_proportion"] == 0.5
-    tree.recipient_branch[4]["source_proportion"] = 1
+
+    tree.source_branch[2]["recipient_proportion"] = 0.5
     assert tree.check_tier_2() == \
       {
-        "correct detection": 0,
-        "reverse detection": 1
+        "source segregating on recipient": 1, 
+        "recipient segregating on source": 2
       }
 
 
@@ -224,33 +223,33 @@ class TestTree:
     assert binned_proportions == [0, 0, 0, 1, 0, 0, 0, 1, 0, 2]
 
 
-  def test_psuedo_entropy(self):
+  def test_standard_entropy(self):
     tree = Tree()
-    assert tree.psuedo_entropy([]) == 0
-    assert tree.psuedo_entropy([1]) == 0
-    assert tree.psuedo_entropy([30]) == 0
-    assert tree.psuedo_entropy([0, 1]) == 0
-    assert tree.psuedo_entropy([0, 99]) == 0
-    assert tree.psuedo_entropy([1, 1]) == 1
+    assert tree.standard_entropy([]) == 0
+    assert tree.standard_entropy([1]) == 0
+    assert tree.standard_entropy([57]) == 0
+    assert tree.standard_entropy([0, 1]) == 0
+    assert tree.standard_entropy([0, 99]) == 0
+    assert tree.standard_entropy([1, 1, 1]) > tree.standard_entropy([1, 0, 2])
 
     source_proportions_binned = [0, 0, 1, 3, 3]
     recipient_proportions_binned = [0, 0, 0, 0, 7]
-    source_entropy = tree.psuedo_entropy(source_proportions_binned)
-    recipient_entropy = tree.psuedo_entropy(recipient_proportions_binned)
+    source_entropy = tree.standard_entropy(source_proportions_binned)
+    recipient_entropy = tree.standard_entropy(recipient_proportions_binned)
     assert source_entropy > recipient_entropy
 
-    source_entropy = tree.psuedo_entropy([1, 1, 0, 0, 0])
-    recipient_entropy = tree.psuedo_entropy([1, 0, 0, 0, 1])
+    source_entropy = tree.standard_entropy([1, 1, 0, 0, 0])
+    recipient_entropy = tree.standard_entropy([1, 0, 0, 0, 1])
     assert source_entropy == recipient_entropy
 
     # important to understand the phylogenetic implications of this one 
-    source_entropy = tree.psuedo_entropy([3, 1, 0, 0])
-    recipient_entropy = tree.psuedo_entropy([2, 2, 0, 0])
+    source_entropy = tree.standard_entropy([3, 1, 0, 0])
+    recipient_entropy = tree.standard_entropy([2, 2, 0, 0])
     assert source_entropy < recipient_entropy
 
     # problem with entropy as proxy for diversity:
-    print("source:", tree.psuedo_entropy([5,1,1,1,1,1]))
-    print("recipient:", tree.psuedo_entropy([0,3,0,2,3,2]))
+    print("source:", tree.standard_entropy([5,1,1,1,1,1]))
+    print("recipient:", tree.standard_entropy([0,3,0,2,3,2]))
 
 
   def test_check_clumpiness(self):
@@ -283,81 +282,22 @@ class TestTree:
         "recipient_proportion": 1
       }
     }
-    entropys = tree.check_clumpiness(branch, num_bins=10)
-    assert entropys["source entropy"] > entropys["recipient entropy"]
+    entropies = tree.check_clumpiness(branch, num_bins=10)
+    assert entropies["source entropy"] > entropies["recipient entropy"]
 
   
-  def test_check_clumpiness_ancestral(self):
-    tree = Tree()
-    assert tree.check_clumpiness_ancestral(num_bins=10) == \
-      {
-        "correct detection": 0,
-        "reverse detection": 0
-      }
-
-    tree.shared_branch = {
-      1: {
-        "source_proportion": 1,
-        "recipient_proportion": 1
-      },
-      2: {
-        "source_proportion": 0.8,
-        "recipient_proportion": 1
-      },
-      3: {
-        "source_proportion": 0.5,
-        "recipient_proportion": 0.8
-      }
-    }
-    assert tree.check_clumpiness_ancestral(num_bins=10) == \
-      {
-        "correct detection": 1,
-        "reverse detection": 0
-      }
-
-    tree.shared_branch = {
-      1: {
-        "source_proportion": 1,
-        "recipient_proportion": 1
-      },
-      2: {
-        "source_proportion": 1,
-        "recipient_proportion": 0.9
-      },
-      3: {
-        "source_proportion": 0.5,
-        "recipient_proportion": 0.8
-      }
-    }
-    assert tree.check_clumpiness_ancestral(num_bins=10) == \
-      {
-        "correct detection": 0,
-        "reverse detection": 1
-      }
-
-    tree.shared_branch = {
-      1: {
-        "source_proportion": 1,
-        "recipient_proportion": 1
-      },
-      2: {
-        "source_proportion": 0.5,
-        "recipient_proportion": 0.8
-      }
-    }
-    assert tree.check_clumpiness_ancestral(num_bins=10) == \
-      {
-        "correct detection": 0,
-        "reverse detection": 0
-      }
-  
-
   def test_check_clumpiness_composite(self):
     tree = Tree()
     assert tree.check_clumpiness_composite(num_bins=10) == \
       {
-        "correct detection": 0,
-        "reverse detection": 0
+        "ancestral to source lineage": {
+          "source": 0,
+          "recipient": 0
+        },
+        "ancestral to recipient lineage": {
+          "source": 0,
+          "recipient": 0
+        }
       }
     
     tree.shared_branch = {
@@ -390,11 +330,11 @@ class TestTree:
         "recipient_proportion": 0.8
       }
     }
-    assert tree.check_clumpiness_composite(num_bins=10) == \
-      {
-        "correct detection": 1,
-        "reverse detection": 0
-      }
+    output = tree.check_clumpiness_composite(num_bins=10)
+    assert output["ancestral to source lineage"]["source"] > \
+           output["ancestral to source lineage"]["recipient"]
+    assert output["ancestral to recipient lineage"]["source"] > \
+           output["ancestral to recipient lineage"]["recipient"]
 
     tree.shared_branch = {
       1: {
@@ -413,13 +353,49 @@ class TestTree:
       },
     }
     tree.recipient_branch = {
-      5: {
+      4: {
         "source_proportion": 0,
         "recipient_proportion": 1
       },
     }
-    assert tree.check_clumpiness_composite(num_bins=10) == \
-      {
-        "correct detection": 0,
-        "reverse detection": 0
+    output = tree.check_clumpiness_composite(num_bins=10)
+    assert output["ancestral to source lineage"]["source"] == \
+           output["ancestral to recipient lineage"]["recipient"]
+
+    tree.shared_branch = {
+      1: {
+        "source_proportion": 1,
+        "recipient_proportion": 1
+      },
+      2: {
+        "source_proportion": 0.7,
+        "recipient_proportion": 0.8
       }
+    }
+    tree.source_branch = {
+      3: {
+        "source_proportion": 0.3,
+        "recipient_proportion": 0
+      },
+      4: {
+        "source_proportion": 0.5,
+        "recipient_proportion": 0
+      },
+    }
+    tree.recipient_branch = {
+      5: {
+        "source_proportion": 0,
+        "recipient_proportion": 0.3 
+      },
+      6: {
+        "source_proportion": 0,
+        "recipient_proportion": 0.5 
+      },
+    }
+    output = tree.check_clumpiness_composite(num_bins=10)
+    assert output["ancestral to source lineage"]["source"] == \
+           output["ancestral to recipient lineage"]["recipient"]
+    assert output["ancestral to source lineage"]["source"] > \
+           output["ancestral to source lineage"]["recipient"]
+    assert output["ancestral to recipient lineage"]["source"] < \
+           output["ancestral to recipient lineage"]["recipient"]
