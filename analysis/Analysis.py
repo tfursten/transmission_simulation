@@ -11,6 +11,7 @@ class Analysis:
     self.recipient_pop = None
     self.sample_size = None
     self.num_bins = None
+    self.combination_number = None
     self.results = {}
 
   @classmethod
@@ -25,49 +26,80 @@ class Analysis:
                                obj.sample_size)
     obj.num_bins = analysis_params["number bins"]
     obj.count_populations = bool(int(analysis_params["count populations"]))
+    obj.combination_number = analysis_params["combination number"]
     return obj
 
   def perform_analysis(self):
-    for source_genome in self.source_pop.sample:
-      for recipient_genome in self.recipient_pop.sample:
-        tree = Tree.initialized(source_genome, recipient_genome, 
-                                self.source_pop, self.recipient_pop)
-        self.collect_tree_results(tree)
-
-  def collect_tree_results(self, tree):
-    statistics = [
-      "tier 1",
-      "tier 2",
-      "clumpiness composite"
-    ]
-    functions = [
-      tree.check_tier_1,
-      tree.check_tier_2,
-      tree.check_clumpiness_composite_gini
-    ]
-    for statistic, function in zip(statistics, functions):
-      self.collect_tree_result(statistic, function)
-
-    self.collect_tree_result("combined", self.get_combined_values)
-
-  def collect_tree_result(self, statistic, check_function):
-    if statistic not in self.results:
-      self.results[statistic] = {
-        "correct detection": [],
-        "reverse detection": []
-      }
-
-    if statistic == "clumpiness composite": 
-      result = check_function(self.num_bins)
+    if self.combination_number == 1:
+      for source_genome in self.source_pop.sample:
+        for recipient_genome in self.recipient_pop.sample:
+          tree = Tree.initialized(source_genome, recipient_genome, 
+                                  self.source_pop, self.recipient_pop)
+          self.collect_tree_results([tree])
     else:
-      result = check_function()
+      for _ in range(10_000):
+        trees = []
+        for c in range(self.combination_number): 
+          source_genome = random.choice(self.source_pop.sample)
+          recipient_genome = random.choice(self.recipient_pop.sample)
+          tree = Tree.initialized(source_genome, recipient_genome, 
+                                  self.source_pop, self.recipient_pop)
+          trees.append(tree)
 
-    self.results[statistic]["correct detection"].append(
-      result["correct detection"] 
-    )
-    self.results[statistic]["reverse detection"].append(
-      result["reverse detection"] 
-    )
+        if len(trees) != self.combination_number:
+          raise ValueError("Number of trees not equal to combination number")
+        self.collect_tree_results(trees)
+
+
+  def collect_tree_results(self, trees):
+    self.collect_tier_1(trees)
+    self.collect_tier_2(trees)
+    self.collect_clumpiness_composite(trees)
+    self.get_combined_values()
+
+  def collect_tier_1(self, trees):
+    tier_1_results = [tree.check_tier_1() for tree in trees]
+    max_src_seg = max(
+      map(lambda r: r["source segregating"], tier_1_results))
+    max_rec_seg = max(
+      map(lambda r: r["recipient segregating"], tier_1_results))
+
+    correct = int(max_src_seg > max_rec_seg)
+    reverse = int(max_src_seg < max_rec_seg)
+    self.add_result(correct, reverse, "tier 1")
+  
+  def collect_tier_2(self, trees):
+    tier_2_results = [tree.check_tier_2() for tree in trees]
+    max_src_on_rec = max(
+      map(lambda r: r["source segregating on recipient"], tier_2_results))
+    max_rec_on_src = max(
+      map(lambda r: r["recipient segregating on source"], tier_2_results))
+    
+    # note: tier 2 definition is changed here, otherwise maximizing works
+    # strongly against us, pushing rec_on_src above zero 
+    # old definition:
+    # correct = src_on_rec > 0 and rec_on_src == 0 
+    # reverse = rec_on_src > 0 and src_on_rec == 0
+    correct = int(max_src_on_rec > max_rec_on_src)
+    reverse = int(max_src_on_rec < max_rec_on_src)
+    self.add_result(correct, reverse, "tier 2")
+
+  def collect_clumpiness_composite(self, trees):
+    clumpiness_results = \
+      [tree.check_clumpiness_composite(self.num_bins) for tree in trees]
+    
+    # implicit assumption here is that a population's highest entropy
+    # value will be along a lineage to a member of that population
+    max_src_clumpiness = max(
+      map(lambda r: r["ancestral to source lineage"]["source"],
+          clumpiness_results))
+    max_rec_clumpiness = max(
+      map(lambda r: r["ancestral to recipient lineage"]["recipient"], 
+          clumpiness_results))
+    
+    correct = int(max_src_clumpiness > max_rec_clumpiness)
+    reverse = int(max_src_clumpiness < max_rec_clumpiness)
+    self.add_result(correct, reverse, "clumpiness")
 
   def get_combined_values(self):
     statistics = [key for key in self.results if key != "combined"]
@@ -80,16 +112,25 @@ class Analysis:
       for statistic in statistics
     ] 
 
-    return {
-      "correct detection": any(correct_values),
-      "reverse detection": any(reverse_values)
-    }
+    correct = int(any(correct_values))
+    reverse = int(any(reverse_values))
+    self.add_result(correct, reverse, "combined")
   
+  def add_result(self, correct, reverse, statistic):
+    if statistic not in self.results:
+      self.results[statistic] = {
+        "correct detection": [],
+        "reverse detection": []
+      }
+
+    self.results[statistic]["correct detection"].append(correct)
+    self.results[statistic]["reverse detection"].append(reverse)
+
   def count_ambiguous_detection(self):
     """
     Tallies the situations in which neither a 'correct' nor a 'reverse'
-    transmission direction is called (i.e. ambiguous transmission), for each
-    statistic.
+    transmission direction is called, or both are called 
+    (i.e. ambiguous transmission), for each statistic.
     """
     num_analyses = len(self.results["tier 1"]["correct detection"])
     for statistic in self.results:
@@ -97,6 +138,9 @@ class Analysis:
       for i in range(num_analyses):
         if (self.results[statistic]["correct detection"][i] == 0 
             and self.results[statistic]["reverse detection"][i] == 0):
+          self.results[statistic]["ambiguous detection"].append(1)
+        elif (self.results[statistic]["correct detection"][i] == 1 
+            and self.results[statistic]["reverse detection"][i] == 1):
           self.results[statistic]["ambiguous detection"].append(1)
         else:
           self.results[statistic]["ambiguous detection"].append(0) 
@@ -140,13 +184,13 @@ class Analysis:
       self.count_populations()
       population_counts = {
         "unique genomes in source population": 
-          self.results.unique_source_pop_genomes,
+          self.results["population counts"]["source population"],
         "unique genomes in source sample": 
-          self.results.unique_source_sample_genomes,
+          self.results["population counts"]["source sample"],
         "unique genomes in recipient population": 
-          self.results.unique_recipient_pop_genomes,
+          self.results["population counts"]["recipient population"],
         "unique genmoes in recipient sample":
-          self.results.unique_recipient_sample_genomes,
+          self.results["population counts"]["recipient sample"],
       }
       output.update(population_counts)
 

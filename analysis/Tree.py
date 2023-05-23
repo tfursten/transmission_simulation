@@ -72,24 +72,20 @@ class Tree:
     rec_segregating = \
       self.count_segregating_snps("recipient", self.shared_branch)
 
-    correct = int(src_segregating > rec_segregating)
-    reverse = int(rec_segregating > src_segregating)
     return {
-      "correct detection": correct,
-      "reverse detection": reverse
+      "source segregating": src_segregating,
+      "recipient segregating": rec_segregating
     }
 
   def check_tier_2(self):
-    src_on_rec_branch_segs = \
+    src_on_rec = \
       self.count_segregating_snps("source", self.recipient_branch)
-    rec_on_src_branch_segs = \
+    rec_on_src = \
       self.count_segregating_snps("recipient", self.source_branch) 
 
-    correct = int(src_on_rec_branch_segs > 0 and rec_on_src_branch_segs == 0) 
-    reverse = int(rec_on_src_branch_segs > 0 and src_on_rec_branch_segs == 0)
     return {
-      "correct detection": correct,
-      "reverse detection": reverse
+      "source segregating on recipient": src_on_rec, 
+      "recipient segregating on source": rec_on_src
     }
 
   def check_clumpiness_composite(self, num_bins):
@@ -100,14 +96,15 @@ class Tree:
     a_to_r_source_entropy, a_to_r_recipient_entropy = \
       self.check_clumpiness(ancestral_to_recipient, num_bins).values()
 
-    correct = (a_to_s_source_entropy > a_to_s_recipient_entropy) and \
-              (a_to_r_source_entropy >= a_to_r_recipient_entropy)
-    reverse = (a_to_s_recipient_entropy > a_to_s_source_entropy) and \
-              (a_to_r_recipient_entropy >= a_to_r_source_entropy)
-
     return {
-      "correct detection": int(correct),
-      "reverse detection": int(reverse)
+      "ancestral to source lineage": {
+        "source": a_to_s_source_entropy,
+        "recipient": a_to_s_recipient_entropy
+      },
+      "ancestral to recipient lineage": {
+        "source": a_to_r_source_entropy,
+        "recipient": a_to_r_recipient_entropy
+      }
     }
 
   def check_clumpiness(self, branch, num_bins):
