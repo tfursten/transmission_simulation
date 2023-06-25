@@ -1,11 +1,14 @@
-import sys
-import os
 import glob
+import gzip
 import json
 import logging
-logging.getLogger().setLevel(logging.INFO)
+import os
+import shutil
+import sys
 
 from .Analysis import Analysis
+
+logging.getLogger().setLevel(logging.INFO)
 
 
 def average_analysis_outputs(outputs):
@@ -30,24 +33,34 @@ def average_analysis_outputs(outputs):
 
   return accumulator
 
-# python analyze.py run_params.json analysis_params.json
+# python -m analysis.analyze analysis_params.json output_file.json
 if __name__ == "__main__":
-  run_params_file = sys.argv[1]
-  analysis_params_file = sys.argv[2]
+  analysis_params_file = sys.argv[1]
 
-  with open(run_params_file, "r") as file:
-    run_params = json.load(file)
   with open(analysis_params_file, 'r') as file:
     analysis_params = json.load(file)
 
+  sim_params_file = analysis_params["path to simulation parameters"]
+  with open(sim_params_file, "r") as file:
+    sim_params = json.load(file)
+
   # find all population files belonging to simulation
   pop_files_dir = analysis_params["path to simulation files"]
-  run_id = run_params["run_id"]
+  sim_id = sim_params["sim_id"]
   pop_files_pattern = \
-    os.path.join(pop_files_dir, "run_" + str(run_id) + "*pop*csv")
+    os.path.join(pop_files_dir, "run_" + str(sim_id) + "*pop*csv.gz")
   pop_files = glob.glob(pop_files_pattern)
   source_pop_files = [file for file in pop_files if "source" in file]
   recipient_pop_files = [file for file in pop_files if "recipient" in file]
+
+  # decompress .gz files
+  for file in source_pop_files + recipient_pop_files:
+    if '.gz' in file:
+      with gzip.open(file, 'rb') as fh_in:
+        with open(file.replace('.gz', ''), 'wb') as fh_out:
+          shutil.copyfileobj(fh_in, fh_out)
+  source_pop_files = [f.replace('.gz', '') for f in source_pop_files]
+  recipient_pop_files = [f.replace('.gz', '') for f in recipient_pop_files]
 
   # ensure files from matching simulation runs are analyzed together
   source_pop_files.sort()
@@ -70,8 +83,16 @@ if __name__ == "__main__":
       simulation_outputs.append(analysis.get_output())
 
     average_analysis_output = average_analysis_outputs(simulation_outputs)
-    average_analysis_output.update(run_params)
+    average_analysis_output.update(sim_params)
     average_analysis_output.update(analysis_params)
     all_simulation_outputs.append(average_analysis_output)
 
-  print(json.dumps(all_simulation_outputs))
+  # write output to command line specified file
+  output_file = sys.argv[2]
+  with open(output_file, 'w') as fh:
+    json.dump(all_simulation_outputs, fh)
+
+  # remove uncompressed output files
+  for file in source_pop_files + recipient_pop_files:
+    assert os.path.exists(file + '.gz')
+    os.remove(file)
