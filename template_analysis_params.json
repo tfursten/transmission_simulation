@@ -1,0 +1,9 @@
+{
+	"path to simulation files": "/some/path/to/simulation_files/",
+	"path to simulation parameters": "/some/path/to/sim_params.json",
+	"analysis repetitions": 2,
+	"sample size": 100,
+	"number bins": 100,
+	"count populations": 0,
+	"combination number": 1
+}

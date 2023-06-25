@@ -1,0 +1,10 @@
+{
+  "sim_id": 1,
+  "repetitions": 1,
+  "mutation rate": 1.6e-10,
+  "genome size": 2800000,
+  "carrying capacity": 100000,
+  "source generations": 25000,
+  "bottleneck": 1,
+  "recipient generations": 100
+}
