@@ -31,8 +31,8 @@ class TestPopulation:
 
 
   def test_sample_population(self):
-    pop = Population.from_csv_file("test_file.csv", sample_size=10)
-    assert len(pop.sample) == 10
+    pop = Population.from_csv_file("test_file.csv", sample_size=2)
+    assert len(pop.sample) == 2
     assert isinstance(pop.sample[0], Genome)
 
     pop = Population.from_csv_file("test_file.csv", sample_size=0)

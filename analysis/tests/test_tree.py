@@ -83,13 +83,13 @@ class TestTree:
       Genome([1,2,4,5]),
       Genome([1,2,3,8]),
     ]
-    source_pop = Population.from_genomes(src_genomes, 20)
+    source_pop = Population.from_genomes(src_genomes, 3)
     rec_genomes = [
       Genome([1,2,3,4,6,9]), # clone
       Genome([1,2,3,4,5]),
       Genome([1,2,4]),
     ]
-    recipient_pop = Population.from_genomes(rec_genomes, 20)
+    recipient_pop = Population.from_genomes(rec_genomes, 3)
     tree = Tree.initialized(src_genomes[0], rec_genomes[0], source_pop, 
                             recipient_pop)
     shared_src_segs = tree.count_segregating_snps("source", tree.shared_branch)
