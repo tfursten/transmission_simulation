@@ -43,7 +43,11 @@ class Population:
     return Genome([int(mutation) for mutation in line.split(",")])
 
   def sample_population(self):
-    self.sample = random.sample(self.population, self.sample_size, )
+    if len(self.population) >= self.sample_size:
+      self.sample = random.sample(self.population, self.sample_size)
+    else:
+      for _ in range(self.sample_size):
+        self.sample.append(random.choice(self.population))
 
   def get_sample_snps(self):
     sample_size = len(self.sample)
