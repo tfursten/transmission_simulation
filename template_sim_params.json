@@ -1,5 +1,5 @@
 {
-  "sim_id": 1,
+  "run_id": 1,
   "repetitions": 1,
   "mutation rate": 1.6e-10,
   "genome size": 2800000,
