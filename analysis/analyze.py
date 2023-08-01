@@ -21,11 +21,14 @@ def average_analysis_outputs(outputs):
     "reverse detection proportion",
     "ambiguous detection proportion"
   )
-  accumulator = outputs[0]
-  for d in outputs[1:]:
-    for key in d:
+
+  keys_of_interest = "tier 1", "tier 2", "clumpiness", "combined"
+  accumulator = {k: outputs[0][k] for k in keys_of_interest}
+
+  for sim in outputs[1:]:
+    for key in keys_of_interest:
       for detection in detections:
-        accumulator[key][detection] += d[key][detection]
+        accumulator[key][detection] += sim[key][detection]
 
   for key in accumulator:
     for detection in detections:
@@ -33,7 +36,7 @@ def average_analysis_outputs(outputs):
 
   return accumulator
 
-# python -m analysis.analyze analysis_params.json output_file.json
+# python -m analysis.analyze analysis_params.json
 if __name__ == "__main__":
   analysis_params_file = sys.argv[1]
 
@@ -46,7 +49,7 @@ if __name__ == "__main__":
 
   # find all population files belonging to simulation
   pop_files_dir = analysis_params["path to simulation files"]
-  sim_id = sim_params["sim_id"]
+  sim_id = sim_params["run_id"]
   pop_files_pattern = \
     os.path.join(pop_files_dir, "run_" + str(sim_id) + "*pop*csv.gz")
   pop_files = glob.glob(pop_files_pattern)
@@ -67,30 +70,36 @@ if __name__ == "__main__":
   recipient_pop_files.sort()
 
   # perform analyses
-  all_simulation_outputs = []
+  all_sim_outputs = []
   sim_count = 1
   for source_pop, recipient_pop in zip(source_pop_files, recipient_pop_files):
     logging.info("simulation repetition: {}".format(sim_count))
     sim_count += 1
 
-    simulation_outputs = []
+    sim_outputs = []
     for i in range(analysis_params["analysis repetitions"]):
       logging.info("\tanalysis repetition: {}".format(i + 1))
       analysis_params["source population file"] = source_pop
       analysis_params["recipient population file"] = recipient_pop
       analysis = Analysis.from_params(analysis_params)
       analysis.perform_analysis()
-      simulation_outputs.append(analysis.get_output())
+      sim_outputs.append(analysis.get_output())
 
-    average_analysis_output = average_analysis_outputs(simulation_outputs)
+    average_analysis_output = average_analysis_outputs(sim_outputs)
     average_analysis_output.update(sim_params)
     average_analysis_output.update(analysis_params)
-    all_simulation_outputs.append(average_analysis_output)
+    average_analysis_output.update(analysis.raw)
+    all_sim_outputs.append(average_analysis_output)
 
-  # write output to command line specified file
-  output_file = sys.argv[2]
-  with open(output_file, 'w') as fh:
-    json.dump(all_simulation_outputs, fh)
+  filename = (
+    f"src{sim_params['source generations']}-"
+    f"rec{sim_params['recipient generations']}-"
+    f"bot{sim_params['bottleneck']}-"
+    f"cmb{analysis_params['combination number']}"
+    ".json"
+  )
+  with open(filename, 'w') as fh:
+    json.dump(all_sim_outputs, fh)
 
   # remove uncompressed output files
   for file in source_pop_files + recipient_pop_files:

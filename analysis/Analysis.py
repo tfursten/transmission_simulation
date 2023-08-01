@@ -13,6 +13,7 @@ class Analysis:
     self.num_bins = None
     self.combination_number = None
     self.results = {}
+    self.raw = {}
 
   @classmethod
   def from_params(cls, analysis_params):
@@ -67,6 +68,8 @@ class Analysis:
     correct = int(max_src_seg > max_rec_seg)
     reverse = int(max_src_seg < max_rec_seg)
     self.add_result(correct, reverse, "tier 1")
+
+    self.add_raw(max_src_seg, max_rec_seg, "tier 1")
   
   def collect_tier_2(self, trees):
     tier_2_results = [tree.check_tier_2() for tree in trees]
@@ -83,6 +86,8 @@ class Analysis:
     correct = int(max_src_on_rec > max_rec_on_src)
     reverse = int(max_src_on_rec < max_rec_on_src)
     self.add_result(correct, reverse, "tier 2")
+
+    self.add_raw(max_src_on_rec, max_rec_on_src, "tier 2")
 
   def collect_clumpiness_composite(self, trees):
     clumpiness_results = \
@@ -101,8 +106,10 @@ class Analysis:
     reverse = int(max_src_clumpiness < max_rec_clumpiness)
     self.add_result(correct, reverse, "clumpiness")
 
+    self.add_raw(max_src_clumpiness, max_rec_clumpiness, "clumpiness")
+
   def get_combined_values(self):
-    statistics = [key for key in self.results if key != "combined"]
+    statistics = "tier 1", "tier 2"
     correct_values = [
       self.results[statistic]["correct detection"][-1] 
       for statistic in statistics
@@ -116,13 +123,21 @@ class Analysis:
     reverse = int(any(reverse_values))
     self.add_result(correct, reverse, "combined")
   
+  def add_raw(self, correct, reverse, statistic):
+    if f"raw {statistic}" not in self.raw:
+      self.raw[f"raw {statistic}"] = {
+        "correct detection": [],
+        "reverse detection": []
+      }
+    self.raw[f"raw {statistic}"]["correct detection"].append(correct)
+    self.raw[f"raw {statistic}"]["reverse detection"].append(reverse)
+
   def add_result(self, correct, reverse, statistic):
     if statistic not in self.results:
       self.results[statistic] = {
         "correct detection": [],
         "reverse detection": []
       }
-
     self.results[statistic]["correct detection"].append(correct)
     self.results[statistic]["reverse detection"].append(reverse)
 
