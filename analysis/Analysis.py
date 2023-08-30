@@ -93,20 +93,70 @@ class Analysis:
     clumpiness_results = \
       [tree.check_clumpiness_composite(self.num_bins) for tree in trees]
     
-    # implicit assumption here is that a population's highest entropy
-    # value will be along a lineage to a member of that population
-    max_src_clumpiness = max(
-      map(lambda r: r["ancestral to source lineage"]["source"],
-          clumpiness_results))
-    max_rec_clumpiness = max(
-      map(lambda r: r["ancestral to recipient lineage"]["recipient"], 
-          clumpiness_results))
-    
-    correct = int(max_src_clumpiness > max_rec_clumpiness)
-    reverse = int(max_src_clumpiness < max_rec_clumpiness)
-    self.add_result(correct, reverse, "clumpiness")
+    tally = {'correct': 0, 'reverse': 0}
+    diff = {'source diff': [], 'recipient diff': []}
+    for result in clumpiness_results:
+      src_on_src = result["ancestral to source lineage"]["source"]
+      rec_on_src = result["ancestral to source lineage"]["recipient"]
+      rec_on_rec = result["ancestral to recipient lineage"]["recipient"]
+      src_on_rec = result["ancestral to recipient lineage"]["source"]
 
-    self.add_raw(max_src_clumpiness, max_rec_clumpiness, "clumpiness")
+      # tally
+      if src_on_src >= rec_on_src:
+        if src_on_rec >= rec_on_rec:
+          correct = 1
+          reverse = 0
+        elif src_on_rec < rec_on_rec:
+          correct = 0
+          reverse = 0
+      elif src_on_src < rec_on_src:
+        if rec_on_rec >= src_on_rec:
+          correct = 0
+          reverse = 1
+        elif rec_on_rec < src_on_rec:
+          correct = 0
+          reverse = 0
+
+      tally['correct'] += correct
+      tally['reverse'] += reverse
+      
+      # magnitude
+      if rec_on_src == 0:
+        rec_on_src = 1
+        src_on_src += 1
+      if rec_on_rec == 0:
+        rec_on_rec = 1
+        src_on_rec += 1
+      diff['source diff'].append(src_on_src / rec_on_src)
+      diff['recipient diff'].append(src_on_rec / rec_on_rec)
+
+    # tally
+    if tally['correct'] > tally['reverse']:
+      correct, reverse = 1, 0
+    elif tally['correct'] == tally['reverse']:
+      correct, reverse = 0, 0
+    else:
+      correct, reverse = 0, 1
+
+    self.add_result(correct, reverse, "clumpiness tally")
+    self.add_raw(correct, reverse, "clumpiness tally")
+
+    # magnitude
+    source_diff = sum(diff['source diff']) / len(diff['source diff'])
+    recipient_diff = sum(diff['recipient diff']) / len(diff['recipient diff'])
+    if source_diff > 1:
+      if recipient_diff > 1:
+        correct, reverse = 1, 0
+      elif recipient_diff <= 1:
+        correct, reverse = 0, 0
+    elif source_diff <= 1:
+      if recipient_diff <= 1:
+        correct, reverse = 0, 1
+      elif recipient_diff > 1:
+        correct, reverse = 0, 0
+
+    self.add_result(correct, reverse, "clumpiness magnitude")
+    self.add_raw(correct, reverse, "clumpiness magnitude")
 
   def get_combined_values(self):
     statistics = "tier 1", "tier 2"

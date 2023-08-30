@@ -22,7 +22,9 @@ def average_analysis_outputs(outputs):
     "ambiguous detection proportion"
   )
 
-  keys_of_interest = "tier 1", "tier 2", "clumpiness", "combined"
+  keys_of_interest = (
+    "tier 1", "tier 2", "clumpiness tally", "clumpiness magnitude", "combined"
+  )
   accumulator = {k: outputs[0][k] for k in keys_of_interest}
 
   for sim in outputs[1:]:
