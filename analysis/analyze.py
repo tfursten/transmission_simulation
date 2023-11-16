@@ -1,14 +1,11 @@
 import glob
 import json
-import logging
 import os
 import sys
 
 import pandas as pd
 
 from .Analysis import Analysis
-
-logging.getLogger().setLevel(logging.INFO)
 
 
 def calc_proportions(df):
@@ -53,20 +50,26 @@ if __name__ == "__main__":
         source_pop_files, recipient_pop_files
     ):
         sim_count += 1
-        logging.info(f"simulation repetition: {sim_count}")
+        print(f"simulation repetition: {sim_count}")
 
         analysis_params["source population file"] = source_pop
         analysis_params["recipient population file"] = recipient_pop
 
         sim_results = pd.DataFrame()
         for rep in range(analysis_params["analysis repetitions"]):
-            logging.info(f"\tanalysis repetition: {rep + 1}")
+            print(f"\tanalysis repetition: {rep + 1}")
             analysis = Analysis.from_params(analysis_params)
             analysis.perform_analysis()
             rep_results = analysis.results
             sim_results = pd.concat([sim_results, rep_results])
 
         all_proportions.append(calc_proportions(sim_results))
+
+    results = pd.concat(all_proportions, ignore_index=True)
+    for col in sim_params:
+        results[col] = sim_params[col]
+    for col in analysis_params:
+        results[col] = analysis_params[col]
 
     filename = (
         f"src{sim_params['source generations']}-"
@@ -75,6 +78,4 @@ if __name__ == "__main__":
         f"cmb{analysis_params['combination number']}"
         ".json"
     )
-    pd.concat(all_proportions, ignore_index=True).to_json(
-        filename, orient='records'
-    )
+    results.to_json(filename, orient='records')
