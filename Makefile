@@ -5,29 +5,19 @@ sim:
 	clang++ $(FLAGS) \
 		simulation/simulation.cpp simulation/population.cpp \
 		simulation/genome.cpp utils.cpp \
-		-o sim \
-		-lboost_iostreams
+		-o sim
 
-sim_monsoon:
-	clang++ $(FLAGS) \
-		simulation/simulation.cpp simulation/population.cpp \
-		simulation/genome.cpp utils.cpp \
-		-o sim \
-		-lz ./libboost_iostreams.a
-	  
 debug_sim:
 	clang++ $(DEBUG_FLAGS) \
 		simulation/simulation.cpp simulation/population.cpp \
 		simulation/genome.cpp utils.cpp \
-		-o sim \
-		-lboost_iostreams
+		-o sim
 
 tests:
 	clang++ $(FLAGS) \
 		tests.cpp utils.cpp simulation/genome.cpp simulation/population.cpp \
-		-o tests \
-		-lboost_iostreams
+		-o tests
 
 
 clean:
-	rm -rf sim analyze tests a.out sim.dSYM/
+	rm -rf sim tests a.out sim.dSYM/

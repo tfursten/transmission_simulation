@@ -6,10 +6,6 @@
 #include <iostream>
 #include <fstream>
 
-#include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-
 #include <vector>
 using std::vector;
 
@@ -61,29 +57,11 @@ int uniform_random_in_range(int limit, int seed) {
     // avoid modulo skew
     int limit_multiples = RAND_MAX / limit;
     int skew_zone_bottom = limit_multiples * limit;
-    
+
     int random_num;
     do {
         random_num = rand();
     } while (random_num > skew_zone_bottom);
 
     return random_num % limit;
-}
-
-void write_gzip_file(std::string input_file, std::string compressed_file) {
-    using namespace std;
-    using namespace boost::iostreams;
-
-    ifstream file(input_file);
-    filtering_streambuf<input> in;
-    in.push(gzip_compressor());
-    in.push(file);
-    
-    ofstream outfile;
-    outfile.open(compressed_file);
-    boost::iostreams::copy(in, outfile);
-    outfile.close();
-
-    const char* old_file = input_file.c_str();
-    remove(old_file);
 }
