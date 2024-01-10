@@ -31,11 +31,7 @@ if __name__ == "__main__":
 
     # find all population files belonging to simulation
     pop_files_dir = analysis_params["path to simulation files"]
-    sim_id = sim_params["run_id"]
-    pop_files_pattern = os.path.join(
-        pop_files_dir, "run_" + str(sim_id) + "*pop*csv"
-    )
-    pop_files = glob.glob(pop_files_pattern)
+    pop_files = glob.glob(os.path.join(pop_files_dir, "run*pop*.csv"))
     source_pop_files = [file for file in pop_files if "source" in file]
     recipient_pop_files = [file for file in pop_files if "recipient" in file]
 
